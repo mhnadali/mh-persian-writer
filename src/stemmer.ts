@@ -1,5 +1,5 @@
 import { StemResult } from './types';
-import { PERSIAN_PREFIXES, PERSIAN_SUFFIXES, VERB_STEMS, ZWNJ } from './constants';
+import { PERSIAN_PREFIXES, PERSIAN_SUFFIXES, VERB_STEMS, BROKEN_PLURALS_MAP, ZWNJ } from './constants';
 
 /**
  * Removes the longest matching Persian suffix from a word.
@@ -10,12 +10,12 @@ export function removeSuffix(word: string): { base: string; suffix: string } {
   const sortedSuffixes = [...PERSIAN_SUFFIXES].sort((a, b) => b.length - a.length);
 
   for (const suffix of sortedSuffixes) {
-    if (word.endsWith(ZWNJ + suffix)) {
+    if (word.endsWith(ZWNJ + suffix) && word.length > suffix.length + 2) {
       return {
         base: word.slice(0, -(suffix.length + 1)),
         suffix: suffix
       };
-    } else if (word.endsWith(suffix)) {
+    } else if (word.endsWith(suffix) && word.length > suffix.length + 2) {
       return {
         base: word.slice(0, -suffix.length),
         suffix: suffix
@@ -35,14 +35,12 @@ export function removePrefix(word: string): { base: string; prefix: string } {
   const sortedPrefixes = [...PERSIAN_PREFIXES].sort((a, b) => b.length - a.length);
 
   for (const prefix of sortedPrefixes) {
-    if (word.startsWith(prefix + ZWNJ)) {
+    if (word.startsWith(prefix + ZWNJ) && word.length > prefix.length + 2) {
       return {
         base: word.slice(prefix.length + 1),
         prefix: prefix
       };
-    } else if (word.startsWith(prefix)) {
-      // Some prefixes might be attached directly, though usually with ZWNJ.
-      // E.g., بی‌حوصله or بیحوصله. Let's allow direct match if needed.
+    } else if (word.startsWith(prefix) && word.length > prefix.length + 2) {
       return {
         base: word.slice(prefix.length),
         prefix: prefix
@@ -52,6 +50,7 @@ export function removePrefix(word: string): { base: string; prefix: string } {
 
   return { base: word, prefix: '' };
 }
+
 
 /**
  * Checks if a word matches a known verb pattern.
@@ -98,11 +97,16 @@ export function getVerbStem(verb: string): { past: string; present: string } | n
 
 /**
  * Stems a Persian word by removing known prefixes and suffixes.
+ * Handles broken plurals by mapping them to their standard base.
+ * 
  * @param word The word to stem
  * @returns The stem result containing word, stem, prefix, and suffix
  */
 export function stem(word: string): StemResult {
-  let currentStem = word;
+  const standardPlural = BROKEN_PLURALS_MAP[word];
+  const targetWord = standardPlural || word;
+
+  let currentStem = targetWord;
   
   const { base: afterPrefixBase, prefix } = removePrefix(currentStem);
   currentStem = afterPrefixBase;
@@ -120,6 +124,7 @@ export function stem(word: string): StemResult {
 
   return result;
 }
+
 
 /**
  * Stems a batch of Persian words.

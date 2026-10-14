@@ -45,8 +45,14 @@
       "types": "./dist/analyzer.d.ts",
       "import": "./dist/analyzer.mjs",
       "require": "./dist/analyzer.js"
+    },
+    "./spell-checker": {
+      "types": "./dist/spell-checker.d.ts",
+      "import": "./dist/spell-checker.mjs",
+      "require": "./dist/spell-checker.js"
     }
   },
+
   "files": [
     "dist",
     "README.md",

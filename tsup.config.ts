@@ -10,6 +10,7 @@ export default defineConfig({
     validators: 'src/validators.ts',
     stemmer: 'src/stemmer.ts',
     analyzer: 'src/analyzer.ts',
+    'spell-checker': 'src/spell-checker.ts',
   },
   format: ['cjs', 'esm'],
   dts: true,

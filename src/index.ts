@@ -26,6 +26,9 @@ export type {
   StemResult,
   TextAnalysis,
   WordFrequency,
+  SpellCheckerOptions,
+  SpellIssue,
+  SpellCheckResult,
 } from './types';
 
 // ─── Normalizer ──────────────────────────────────────────────────────
@@ -110,6 +113,17 @@ export {
   getSummaryStats,
 } from './analyzer';
 
+// ─── Spell Checker ───────────────────────────────────────────────────
+export {
+  spellCheck,
+  suggestCorrections,
+  isWordCorrect,
+  calculateSimilarity,
+  damerauLevenshteinDistance,
+  fixBrokenPlurals,
+  fixCommonTypos,
+} from './spell-checker';
+
 // ─── Constants (for advanced users) ──────────────────────────────────
 export {
   ZWNJ,
@@ -120,4 +134,10 @@ export {
   LETTER_TEMPLATES,
   VERB_STEMS,
   BANK_CARD_PREFIXES,
+  HOMOPHONES_GROUPS,
+  HOMOPHONE_MAP,
+  COMMON_TYPOS,
+  BROKEN_PLURALS_MAP,
+  BASE_PERSIAN_DICTIONARY,
 } from './constants';
+

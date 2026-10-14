@@ -187,3 +187,43 @@ export interface WordFrequency {
   count: number;
   percentage: number;
 }
+
+// ─── Spell Checker Types ─────────────────────────────────────────────
+
+/** تنظیمات غلط‌یاب املایی */
+export interface SpellCheckerOptions {
+  /** حداکثر فاصله ویرایشی مجاز (پیش‌فرض: ۲) */
+  maxDistance?: number;
+  /** حداکثر تعداد پیشنهادات اصلاحی (پیش‌فرض: ۳) */
+  maxSuggestions?: number;
+  /** واژه‌نامه سفارشی تکمیلی */
+  customDictionary?: string[];
+  /** در نظر گرفتن خطاهای حروف هم‌آوا (س/ص/ث، ز/ض/ظ/ذ و...) */
+  useHomophones?: boolean;
+}
+
+/** خطای املایی شناسایی‌شده */
+export interface SpellIssue {
+  /** واژه نادرست */
+  word: string;
+  /** موقعیت کاراکتری در متن */
+  position: number;
+  /** پیشنهادات تصحیح به ترتیب شباهت */
+  suggestions: string[];
+  /** میزان شباهت (۰ تا ۱) */
+  similarity?: number;
+  /** نوع احتمالی خطا (هم‌آوا، جابجایی حروف، کیبورد) */
+  errorType?: 'homophone' | 'transposition' | 'keyboard' | 'general';
+}
+
+/** نتیجه بررسی املایی متن */
+export interface SpellCheckResult {
+  /** آیا متن بدون خطای املایی است؟ */
+  isValid: boolean;
+  /** خطاهای شناسایی‌شده */
+  issues: SpellIssue[];
+  /** متن تصحیح‌شده بر اساس بهترین پیشنهادها */
+  correctedText: string;
+  /** تعداد واژه‌های بررسی‌شده */
+  wordCount: number;
+}
