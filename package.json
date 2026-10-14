@@ -1,0 +1,114 @@
+{
+  "name": "mh-persian-writer",
+  "version": "1.0.0",
+  "description": "A comprehensive, professional-grade Persian (Farsi) language toolkit — text normalization, formal/administrative writing, grammar analysis, number utilities, and validation. Inspired by the best of Hazm, ParsBERT, Hezar, DadmaTools & Persian-Tools.",
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
+    },
+    "./normalizer": {
+      "types": "./dist/normalizer.d.ts",
+      "import": "./dist/normalizer.mjs",
+      "require": "./dist/normalizer.js"
+    },
+    "./tokenizer": {
+      "types": "./dist/tokenizer.d.ts",
+      "import": "./dist/tokenizer.mjs",
+      "require": "./dist/tokenizer.js"
+    },
+    "./formal-writer": {
+      "types": "./dist/formal-writer.d.ts",
+      "import": "./dist/formal-writer.mjs",
+      "require": "./dist/formal-writer.js"
+    },
+    "./numbers": {
+      "types": "./dist/numbers.d.ts",
+      "import": "./dist/numbers.mjs",
+      "require": "./dist/numbers.js"
+    },
+    "./validators": {
+      "types": "./dist/validators.d.ts",
+      "import": "./dist/validators.mjs",
+      "require": "./dist/validators.js"
+    },
+    "./stemmer": {
+      "types": "./dist/stemmer.d.ts",
+      "import": "./dist/stemmer.mjs",
+      "require": "./dist/stemmer.js"
+    },
+    "./analyzer": {
+      "types": "./dist/analyzer.d.ts",
+      "import": "./dist/analyzer.mjs",
+      "require": "./dist/analyzer.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "lint": "eslint src/ tests/ --ext .ts",
+    "lint:fix": "eslint src/ tests/ --ext .ts --fix",
+    "format": "prettier --write \"src/**/*.ts\" \"tests/**/*.ts\"",
+    "typecheck": "tsc --noEmit",
+    "prepublishOnly": "npm run lint && npm run test && npm run build",
+    "clean": "rimraf dist"
+  },
+  "keywords": [
+    "persian",
+    "farsi",
+    "nlp",
+    "text-normalization",
+    "formal-writing",
+    "administrative-writing",
+    "persian-grammar",
+    "tokenizer",
+    "stemmer",
+    "validator",
+    "zwnj",
+    "half-space",
+    "persian-numbers",
+    "national-id",
+    "iban",
+    "sheba",
+    "rtl",
+    "unicode",
+    "i18n",
+    "localization"
+  ],
+  "author": "M.H. Nadali <mhnadali@github.com>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mhnadali/mh-persian-writer.git"
+  },
+  "bugs": {
+    "url": "https://github.com/mhnadali/mh-persian-writer/issues"
+  },
+  "homepage": "https://github.com/mhnadali/mh-persian-writer#readme",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "@typescript-eslint/eslint-plugin": "^7.0.0",
+    "@typescript-eslint/parser": "^7.0.0",
+    "eslint": "^8.56.0",
+    "prettier": "^3.2.0",
+    "rimraf": "^5.0.0",
+    "tsup": "^8.0.0",
+    "typescript": "^5.4.0",
+    "vitest": "^1.6.0"
+  }
+}
