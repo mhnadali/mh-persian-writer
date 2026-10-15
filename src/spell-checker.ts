@@ -10,6 +10,7 @@ import { SpellCheckerOptions, SpellCheckResult, SpellIssue } from './types';
 import {
   COMMON_TYPOS,
   HOMOPHONE_MAP,
+  KEYBOARD_NEIGHBORS,
   BROKEN_PLURALS_MAP,
   BASE_PERSIAN_DICTIONARY,
   ZWNJ,
@@ -20,27 +21,34 @@ import { isVerb } from './stemmer';
 /** مجموعه کلمات پایه برای جستجوی فوق‌سریع O(1) */
 const baseDictionarySet = new Set<string>(BASE_PERSIAN_DICTIONARY);
 
-/** پسوندهای اشتقاقی و صرفی زبان فارسی */
+/** پسوندهای اشتقاقی و صرفی زبان فارسی (مرتب‌شده بر اساس طول جهت تفکیک حریصانه) */
 const VALID_SUFFIXES = [
-  'ها', 'های', 'هایی', 'هایمان', 'هایتان', 'هایشان', 'هایم', 'هایت', 'هایش',
-  'ان', 'گان', 'یان',
-  'تر', 'ترین', 'تری',
-  'ام', 'ات', 'اش', 'مان', 'تان', 'شان',
-  'ای', 'ایم', 'اید', 'اند',
-  'ی', 'یی', 'ین', 'ینه',
-  'چه', 'ک', 'کده', 'گاه', 'ستان', 'زار', 'بار', 'وار',
-  'مند', 'ناک', 'گار', 'گر', 'گری', 'بان', 'دان',
-  'یت', 'یات',
-  'سازی', 'ساز', 'سازان',
+  'هایمان', 'هایتان', 'هایشان', 'هایم', 'هایت', 'هایش',
+  'کنندگان', 'کننده',
+  'افزارها', 'افزار',
+  'نامه‌ها', 'نامه',
+  'شناسان', 'شناسی', 'شناس',
+  'سازان', 'سازی', 'ساز',
   'سنجی', 'سنج',
   'یابی', 'یاب',
   'رسانی', 'رسان',
-  'شناسی', 'شناس', 'شناسان',
   'پذیری', 'پذیر',
-  'کننده', 'کنندگان',
-  'افزار', 'افزارها',
-  'نامه', 'نامه‌ها',
+  'هایی', 'های', 'ها',
+  'ترین', 'تری', 'تر',
+  'گان', 'یان', 'ان',
+  'مان', 'تان', 'شان',
+  'گری', 'گار', 'گر',
+  'مند', 'ناک', 'بان', 'دان',
+  'کده', 'گاه', 'ستان', 'زار', 'بار', 'وار',
+  'یات', 'یت',
+  'ام', 'ات', 'اش',
+  'اید', 'اند', 'ایم', 'ای',
+  'ینه', 'ین', 'یی', 'ی',
+  'چه', 'ک',
+  'م', 'ت', 'ش',
 ];
+
+const VALID_SUFFIX_SET = new Set(VALID_SUFFIXES);
 
 /** پیشوندهای اشتقاقی و صرفی زبان فارسی */
 const VALID_PREFIXES = [
@@ -57,8 +65,17 @@ function areHomophones(char1: string, char2: string): boolean {
 }
 
 /**
+ * بررسی می‌کند که آیا دو حرف، در کیبورد استاندارد ایران (ISIRI 9147) مجاور هم هستند یا خیر.
+ */
+function areKeyboardNeighbors(char1: string, char2: string): boolean {
+  if (char1 === char2) return true;
+  const list = KEYBOARD_NEIGHBORS[char1];
+  return list ? list.includes(char2) : false;
+}
+
+/**
  * محاسبه فاصله ویرایشی دامرو-لون‌اشتاین (Damerau-Levenshtein Distance)
- * با در نظر گرفتن جابجایی حروف مجاور و کاهش جریمه خطای حروف هم‌آوا
+ * با در نظر گرفتن جابجایی حروف مجاور، کاهش جریمه حروف هم‌آوا و کلیدهای مجاور کیبورد
  *
  * @param s1 واژه اول
  * @param s2 واژه دوم
@@ -96,6 +113,8 @@ export function damerauLevenshteinDistance(
         cost = 0;
       } else if (useHomophones && areHomophones(c1, c2)) {
         cost = 0.5; // خطای هم‌آوا نیمی از خطای ویرایشی عادی جریمه دارد
+      } else if (areKeyboardNeighbors(c1, c2)) {
+        cost = 0.6; // خطای فشردن کلیدهای مجاور در چیدمان کیبورد استاندارد ایران
       }
 
       d[i][j] = Math.min(
@@ -136,17 +155,21 @@ export function calculateSimilarity(s1: string, s2: string): number {
 }
 
 /**
- * بررسی ساختار مورفولوژیک و پسوندها و پیشوندهای کلمه
+ * بررسی ساختار مورفولوژیک و پسوندها و پیشوندهای کلمه به صورت بازگشتی چندسطحی
  */
-function checkMorphology(word: string, dict: Set<string>): boolean {
+function checkMorphology(word: string, dict: Set<string>, depth: number = 0): boolean {
+  if (depth > 4 || word.length < 2) return false;
+
   // ۱. بررسی تفکیک پسوندها
   for (const suffix of VALID_SUFFIXES) {
     if (word.endsWith(ZWNJ + suffix) && word.length >= suffix.length + 2) {
       const base = word.slice(0, -(suffix.length + 1));
-      if (dict.has(base) || isVerb(base) || checkMorphology(base, dict)) return true;
+      if (dict.has(base) || isVerb(base) || checkMorphology(base, dict, depth + 1)) return true;
     } else if (word.endsWith(suffix) && word.length >= suffix.length + 2) {
       const base = word.slice(0, -suffix.length);
-      if (dict.has(base) || isVerb(base) || checkMorphology(base, dict)) return true;
+      // پسوندهای تک‌حرفی (مانند م، ت، ش) نیاز به احتیاط بیشتر در طول ریشه دارند
+      if (suffix.length === 1 && base.length < 2) continue;
+      if (dict.has(base) || isVerb(base) || checkMorphology(base, dict, depth + 1)) return true;
     }
   }
 
@@ -154,10 +177,10 @@ function checkMorphology(word: string, dict: Set<string>): boolean {
   for (const prefix of VALID_PREFIXES) {
     if (word.startsWith(prefix + ZWNJ) && word.length >= prefix.length + 2) {
       const base = word.slice(prefix.length + 1);
-      if (dict.has(base) || isVerb(base) || checkMorphology(base, dict)) return true;
+      if (dict.has(base) || isVerb(base) || checkMorphology(base, dict, depth + 1)) return true;
     } else if (word.startsWith(prefix) && word.length >= prefix.length + 2) {
       const base = word.slice(prefix.length);
-      if (dict.has(base) || isVerb(base) || checkMorphology(base, dict)) return true;
+      if (dict.has(base) || isVerb(base) || checkMorphology(base, dict, depth + 1)) return true;
     }
   }
 
@@ -165,7 +188,7 @@ function checkMorphology(word: string, dict: Set<string>): boolean {
 }
 
 /**
- * بررسی واژه‌های مرکب متصل (مانند وبسایت، همگامسازی، شخصیسازی، بدافزار)
+ * بررسی واژه‌های مرکب متصل (مانند وبسایت، همگامسازی، شخصیسازی، بدافزار، کلاهبرداریها)
  */
 function checkCompoundWords(word: string, dict: Set<string>): boolean {
   if (word.length < 5) return false;
@@ -174,9 +197,14 @@ function checkCompoundWords(word: string, dict: Set<string>): boolean {
     const part1 = word.slice(0, i);
     const part2 = word.slice(i);
 
+    const part1Valid = dict.has(part1) || isVerb(part1) || checkMorphology(part1, dict, 1);
+    if (!part1Valid) continue;
+
     if (
-      (dict.has(part1) || checkMorphology(part1, dict)) &&
-      (dict.has(part2) || checkMorphology(part2, dict))
+      dict.has(part2) ||
+      isVerb(part2) ||
+      VALID_SUFFIX_SET.has(part2) ||
+      checkMorphology(part2, dict, 1)
     ) {
       return true;
     }

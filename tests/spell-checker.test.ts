@@ -116,5 +116,33 @@ describe('Phase 2: Persian Spell Checker & Lexicon Engine', () => {
       expect(result.issues[2].suggestions).toContain('حاضر');
     });
   });
+
+  describe('Phase 1 Hardening: Multi-Affix Morphology & ISIRI 9147 Keyboard Matrix', () => {
+    it('accurately verifies multi-affix stacked words and pronominal clitics', () => {
+      expect(isWordCorrect('سازمان‌هایمان')).toBe(true);
+      expect(isWordCorrect('پیگیری‌هایتان')).toBe(true);
+      expect(isWordCorrect('کتاب‌هایشان')).toBe(true);
+      expect(isWordCorrect('دیدمشان')).toBe(true);
+      expect(isWordCorrect('خواندیمش')).toBe(true);
+    });
+
+    it('recognizes compound words written without half-space or space', () => {
+      expect(isWordCorrect('کلاهبرداریها')).toBe(true);
+      expect(isWordCorrect('وبسایتها')).toBe(true);
+      expect(isWordCorrect('همگامسازی')).toBe(true);
+      expect(isWordCorrect('بدافزارها')).toBe(true);
+    });
+
+    it('penalizes physically adjacent keys on Persian Standard Keyboard (ISIRI 9147) less', () => {
+      // س and ی are neighbors on Row 2 -> cost 0.6
+      // س and م are distant -> cost 1.0
+      const neighborDist = damerauLevenshteinDistance('سیب', 'ییب', false);
+      const distantDist = damerauLevenshteinDistance('سیب', 'میب', false);
+      expect(neighborDist).toBe(0.6);
+      expect(distantDist).toBe(1.0);
+      expect(neighborDist).toBeLessThan(distantDist);
+    });
+  });
 });
+
 

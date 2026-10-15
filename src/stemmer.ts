@@ -99,6 +99,17 @@ export function isVerb(word: string): boolean {
     }
   }
 
+  // بررسی ضمایر متصل مفعولی چسبیده به فعل: دیدمشان، دیدمش، خواندیمش
+  const pronominalClitics = ['شان', 'تان', 'مان', 'ش', 'ت', 'م'];
+  for (const clitic of pronominalClitics) {
+    if (word.endsWith(clitic) && word.length >= clitic.length + 3) {
+      const baseWithoutClitic = word.slice(0, -clitic.length);
+      if (isVerb(baseWithoutClitic)) {
+        return true;
+      }
+    }
+  }
+
   return false;
 }
 
