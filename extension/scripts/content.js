@@ -50,17 +50,21 @@
     btn.innerHTML = `
       <div class="amach-bubble-main">
         <span class="amach-logo-icon">🖊️</span>
-        <span class="amach-bubble-title">امـاچ</span>
+        <span class="amach-bubble-title">ام‌اچ</span>
+        <span class="amach-bubble-badge">M.H.</span>
       </div>
       <div class="amach-bubble-menu">
-        <button type="button" class="amach-action-btn" data-action="normalize" title="نرمال‌سازی و نیم‌فاصله">
-          <span>✨</span> پاک‌سازی
+        <button type="button" class="amach-action-btn" data-action="normalize" title="نرمال‌سازی، کاراکترها و نیم‌فاصله (Alt+Shift+N)">
+          <span class="btn-icon">✨</span>
+          <span>نیم‌فاصله</span>
         </button>
-        <button type="button" class="amach-action-btn" data-action="formalize" title="تبدیل به متن اداری">
-          <span>👔</span> رسمی‌سازی
+        <button type="button" class="amach-action-btn" data-action="formalize" title="تبدیل به متن رسمی و اداری (Alt+Shift+F)">
+          <span class="btn-icon">👔</span>
+          <span>رسمی‌سازی</span>
         </button>
         <button type="button" class="amach-action-btn" data-action="spell" title="اصلاح غلط‌های املایی">
-          <span>🔍</span> غلط‌یاب
+          <span class="btn-icon">🔍</span>
+          <span>غلط‌یاب</span>
         </button>
       </div>
     `;
@@ -181,7 +185,7 @@
     }
 
     applyReplacement(replacement);
-    showToastNotification(`متن با موفقیت توسط امـاچ به‌روزرسانی شد ✨`);
+    showToastNotification(`متن با موفقیت توسط ام‌اچ (M.H.) ویرایش شد ✨`);
   }
 
   // جایگزینی متن در DOM با پشتیبانی کامل از ویرایشگرهای ریچ‌تکست (Gmail, Notion, Slack)

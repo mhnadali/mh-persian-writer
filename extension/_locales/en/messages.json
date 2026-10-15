@@ -1,14 +1,14 @@
 {
   "appName": {
-    "message": "Amach Persian Writer | mh-persian-writer",
-    "description": "The name of the extension"
+    "message": "M.H. Persian Writer | Professional Editor",
+    "description": "Official extension name"
   },
   "appShortName": {
-    "message": "Amach",
-    "description": "Short name"
+    "message": "M.H. Writer",
+    "description": "Short extension name"
   },
   "appDesc": {
-    "message": "Professional Persian Grammar, Spell Checker, Half-Space (ZWNJ) and Administrative Letter Assistant.",
-    "description": "The description of the extension"
+    "message": "Intelligent Persian grammar, spell checker, half-space normalizer, and formal writing assistant by M.H. Nadali.",
+    "description": "Extension description"
   }
 }

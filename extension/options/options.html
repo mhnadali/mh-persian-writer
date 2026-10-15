@@ -2,166 +2,402 @@
 <html lang="fa" dir="rtl">
 <head>
   <meta charset="UTF-8">
-  <title>تنظیمات ویراستار فارسی امـاچ</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>تنظیمات ویراستار فارسی ام‌اچ (M.H.)</title>
   <style>
-    body {
-      background-color: #0f172a;
-      color: #f8fafc;
-      font-family: 'Vazirmatn', -apple-system, BlinkMacSystemFont, 'Segoe UI', Tahoma, sans-serif;
-      padding: 40px;
+    :root {
+      --bg-base: #090d16;
+      --bg-surface: #0f172a;
+      --bg-card: rgba(26, 36, 54, 0.75);
+      --border-subtle: rgba(255, 255, 255, 0.08);
+      --border-focus: #0ea5e9;
+      --text-primary: #f8fafc;
+      --text-secondary: #94a3b8;
+      --cyan-primary: #0ea5e9;
+      --emerald-primary: #10b981;
+    }
+
+    * {
+      box-sizing: border-box;
       margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-base);
+      background-image: 
+        radial-gradient(ellipse at 80% 0%, rgba(14, 165, 233, 0.12) 0%, transparent 60%),
+        radial-gradient(ellipse at 20% 100%, rgba(139, 92, 246, 0.08) 0%, transparent 50%);
+      color: var(--text-primary);
+      font-family: 'Vazirmatn', 'Shabnam', 'IRANSans', system-ui, -apple-system, sans-serif;
+      padding: 40px 20px;
       direction: rtl;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
     }
-    .options-card {
-      max-width: 600px;
+
+    .container {
+      max-width: 680px;
       margin: 0 auto;
-      background: #1e293b;
-      padding: 30px;
-      border-radius: 16px;
-      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
-      border: 1px solid #334155;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
     }
+
+    /* هدر صفحه تنظیمات */
+    .header-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 18px;
+      padding: 24px 28px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .brand-group {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .brand-icon {
+      font-size: 28px;
+      background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      width: 52px;
+      height: 52px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 14px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    }
+
+    .title-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
     h1 {
-      font-size: 22px;
+      font-size: 19px;
+      font-weight: 800;
+      color: #f1f5f9;
+    }
+
+    .badge-mh {
+      background: rgba(14, 165, 233, 0.15);
+      border: 1px solid rgba(56, 189, 248, 0.35);
       color: #38bdf8;
-      margin-bottom: 8px;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 6px;
+      font-family: system-ui, sans-serif;
     }
-    p.desc {
-      color: #94a3b8;
-      font-size: 13px;
-      margin-bottom: 25px;
+
+    .desc {
+      color: var(--text-secondary);
+      font-size: 12.5px;
+      margin-top: 2px;
     }
+
+    /* بدنه تنظیمات */
+    .settings-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 18px;
+      padding: 24px 28px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .section-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: #38bdf8;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
     .setting-row {
       display: flex;
       justify-content: space-between;
       align-items: center;
       padding: 16px 0;
-      border-bottom: 1px solid #334155;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
     }
-    .setting-label b {
+
+    .setting-row:last-child {
+      border-bottom: none;
+    }
+
+    .setting-info {
+      max-width: 80%;
+    }
+
+    .setting-info b {
       display: block;
       font-size: 14px;
-      color: #f1f5f9;
-      margin-bottom: 4px;
+      color: #f8fafc;
+      margin-bottom: 3px;
     }
-    .setting-label span {
+
+    .setting-info span {
       font-size: 12px;
-      color: #94a3b8;
+      color: var(--text-secondary);
     }
-    /* Switch component */
+
+    /* سوئیچ اختصاصی مدرن */
     .switch {
       position: relative;
       display: inline-block;
-      width: 48px;
-      height: 26px;
+      width: 50px;
+      height: 28px;
+      flex-shrink: 0;
     }
+
     .switch input {
       opacity: 0;
       width: 0;
       height: 0;
     }
+
     .slider {
       position: absolute;
       cursor: pointer;
       top: 0; left: 0; right: 0; bottom: 0;
-      background-color: #475569;
-      transition: .3s;
+      background-color: #334155;
+      transition: .25s cubic-bezier(0.16, 1, 0.3, 1);
       border-radius: 34px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
     }
+
     .slider:before {
       position: absolute;
       content: "";
       height: 20px;
       width: 20px;
-      left: 3px;
+      left: 4px;
       bottom: 3px;
-      background-color: white;
-      transition: .3s;
+      background-color: #ffffff;
+      transition: .25s cubic-bezier(0.16, 1, 0.3, 1);
       border-radius: 50%;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
     }
+
     input:checked + .slider {
-      background-color: #2563eb;
+      background-color: var(--cyan-primary);
     }
+
     input:checked + .slider:before {
-      transform: translateX(22px);
+      transform: translateX(21px);
     }
-    .btn-save {
-      margin-top: 25px;
-      background: #059669;
-      color: white;
-      border: none;
-      padding: 12px 24px;
+
+    /* بخش آزمون زنده (Live Playground) */
+    .playground-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 18px;
+      padding: 24px 28px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .playground-input {
+      width: 100%;
+      height: 80px;
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid var(--border-subtle);
+      border-radius: 10px;
+      color: #ffffff;
+      padding: 10px 14px;
+      font-family: inherit;
+      font-size: 13.5px;
+      outline: none;
+      resize: none;
+      direction: rtl;
+    }
+
+    .playground-input:focus {
+      border-color: var(--cyan-primary);
+    }
+
+    .btn-test {
+      align-self: flex-start;
+      background: rgba(14, 165, 233, 0.15);
+      border: 1px solid rgba(56, 189, 248, 0.35);
+      color: #38bdf8;
       border-radius: 8px;
+      padding: 7px 16px;
+      font-size: 12.5px;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .btn-test:hover {
+      background: var(--cyan-primary);
+      color: #ffffff;
+    }
+
+    .test-result-box {
+      background: rgba(15, 23, 42, 0.7);
+      border: 1px dashed rgba(56, 189, 248, 0.3);
+      padding: 10px 14px;
+      border-radius: 8px;
+      font-size: 13px;
+      color: #38bdf8;
+      min-height: 40px;
+      display: flex;
+      align-items: center;
+    }
+
+    /* نوار ذخیره و عملیات */
+    .save-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-top: 10px;
+    }
+
+    .btn-save {
+      background: linear-gradient(135deg, #059669 0%, #047857 100%);
+      color: white;
+      border: 1px solid rgba(52, 211, 153, 0.4);
+      padding: 12px 28px;
+      border-radius: 11px;
       font-family: inherit;
       font-size: 14px;
-      font-weight: bold;
+      font-weight: 700;
       cursor: pointer;
-      transition: filter 0.15s;
+      transition: all 0.18s ease;
+      box-shadow: 0 4px 15px rgba(5, 150, 105, 0.3);
     }
+
     .btn-save:hover {
       filter: brightness(1.1);
+      transform: translateY(-1px);
     }
+
     .save-alert {
-      margin-top: 15px;
       color: #34d399;
       font-size: 13px;
-      display: none;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      opacity: 0;
+      transition: opacity 0.25s ease;
+    }
+
+    .save-alert.show {
+      opacity: 1;
     }
   </style>
 </head>
 <body>
-  <div class="options-card">
-    <h1>⚙️ تنظیمات ویراستار فارسی امـاچ</h1>
-    <p class="desc">شخصی‌سازی نحوه رفتار، اعتبارسنجی‌ها و ابزارک‌های تعاملی در صفحات وب</p>
-
-    <div class="setting-row">
-      <div class="setting-label">
-        <b>دکمه شناور تعاملی (Floating Action Button)</b>
-        <span>نمایش آیکون امـاچ هنگام انتخاب (Select) متون در صفحات وب و پیام‌رسان‌ها</span>
+  <div class="container">
+    <!-- هدر صفحه -->
+    <header class="header-card">
+      <div class="brand-group">
+        <div class="brand-icon">🖊️</div>
+        <div>
+          <div class="title-row">
+            <h1>تنظیمات ویراستار فارسی ام‌اچ</h1>
+            <span class="badge-mh">M.H. Nadali</span>
+          </div>
+          <p class="desc">شخصی‌سازی موتور پردازش و ابزارک‌های تعاملی در سراسر وب</p>
+        </div>
       </div>
-      <label class="switch">
-        <input type="checkbox" id="opt-floating" checked>
-        <span class="slider"></span>
-      </label>
-    </div>
+    </header>
 
-    <div class="setting-row">
-      <div class="setting-label">
-        <b>تنظیم خودکار ارقام فارسی</b>
-        <span>تبدیل خودکار ارقام انگلیسی و عربی به فارسی در هنگام پاک‌سازی</span>
+    <!-- تنظیمات رفتاری و نگارشی -->
+    <main class="settings-card">
+      <div class="section-title">
+        <span>⚙️</span> تنظیمات رفتاری و افزونه در صفحات وب
       </div>
-      <label class="switch">
-        <input type="checkbox" id="opt-digits" checked>
-        <span class="slider"></span>
-      </label>
-    </div>
 
-    <div class="setting-row">
-      <div class="setting-label">
-        <b>غلط‌یاب خودکار با حروف هم‌آوا</b>
-        <span>شناسایی اشتباهات املایی کلمات مشابه صوتی (ص/س، ض/ز/ظ/ذ، ت/ط)</span>
+      <div class="setting-row">
+        <div class="setting-info">
+          <b>حباب شناور تعاملی (Floating Action Bubble)</b>
+          <span>نمایش خودکار نشان ام‌اچ (M.H.) هنگام انتخاب متون در صفحات وب و پیام‌رسان‌ها</span>
+        </div>
+        <label class="switch">
+          <input type="checkbox" id="opt-floating" checked>
+          <span class="slider"></span>
+        </label>
       </div>
-      <label class="switch">
-        <input type="checkbox" id="opt-spell" checked>
-        <span class="slider"></span>
-      </label>
-    </div>
 
-    <div class="setting-row">
-      <div class="setting-label">
-        <b>اصلاح پیشرفته نیم‌فاصله</b>
-        <span>اعمال قواعد فرهنگستان برای پیشوندهای می‌/نمی‌ و پسوندهای ها/تر/ترین</span>
+      <div class="setting-row">
+        <div class="setting-info">
+          <b>تبدیل خودکار ارقام به فارسی</b>
+          <span>تبدیل ارقام انگلیسی (1, 2, 3) و عربی (١, ٢, ٣) به اعداد شکیل فارسی (۱، ۲، ۳)</span>
+        </div>
+        <label class="switch">
+          <input type="checkbox" id="opt-digits" checked>
+          <span class="slider"></span>
+        </label>
       </div>
-      <label class="switch">
-        <input type="checkbox" id="opt-zwnj" checked>
-        <span class="slider"></span>
-      </label>
-    </div>
 
-    <button id="btn-save" class="btn-save">ذخیره تنظیمات</button>
-    <div id="save-msg" class="save-alert">تنظیمات با موفقیت ذخیره گردید. ✓</div>
+      <div class="setting-row">
+        <div class="setting-info">
+          <b>غلط‌یاب هوشمند با حروف هم‌آوا</b>
+          <span>بررسی و کشف خطاهای کلمات مشابه آوایی (مانند ص/س، ض/ز/ظ/ذ، ت/ط، ه/ح)</span>
+        </div>
+        <label class="switch">
+          <input type="checkbox" id="opt-spell" checked>
+          <span class="slider"></span>
+        </label>
+      </div>
+
+      <div class="setting-row">
+        <div class="setting-info">
+          <b>اصلاح پیشرفته نیم‌فاصله (ZWNJ)</b>
+          <span>تنظیم دقیق پیشوندهای «می‌/نمی‌/بی‌» و پسوندهای «ها/تر/ترین/هایی» بر پایه اصول فرهنگستان</span>
+        </div>
+        <label class="switch">
+          <input type="checkbox" id="opt-zwnj" checked>
+          <span class="slider"></span>
+        </label>
+      </div>
+
+      <!-- نوار دکمه ذخیره -->
+      <div class="save-bar">
+        <button id="btn-save" class="btn-save">ذخیره تنظیمات</button>
+        <div id="save-msg" class="save-alert">
+          <span>✓</span> تنظیمات با موفقیت در مرورگر ذخیره و همگام شد.
+        </div>
+      </div>
+    </main>
+
+    <!-- محیط آزمون زنده (Live Playground) -->
+    <section class="playground-card">
+      <div class="section-title">
+        <span>🧪</span> آزمایش زنده تنظیمات (Playground)
+      </div>
+      <p class="desc">متن زیر را ویرایش کرده و برای سنجش عملکرد تنظیمات روی دکمه آزمون کلیک نمایید:</p>
+      <textarea id="test-input" class="playground-input">ميخوام برم به خانه ها با 10 نفر مسعول پروژه!</textarea>
+      <button type="button" id="btn-test" class="btn-test">⚡ بررسی و پردازش زنده</button>
+      <div id="test-output" class="test-result-box">نتیجه ویرایش اینجا نمایش داده می‌شود...</div>
+    </section>
   </div>
 
+  <script src="../scripts/core-bundle.global.js"></script>
   <script src="options.js"></script>
 </body>
 </html>

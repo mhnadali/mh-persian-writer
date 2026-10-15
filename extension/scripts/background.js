@@ -10,7 +10,7 @@ chrome.runtime.onInstalled.addListener(() => {
   chrome.contextMenus.removeAll(() => {
     chrome.contextMenus.create({
       id: "amach_root",
-      title: "ویراستار فارسی امـاچ",
+      title: "ویراستار فارسی ام‌اچ (M.H.)",
       contexts: ["selection", "editable"]
     });
 

@@ -2,63 +2,128 @@
 <html lang="fa" dir="rtl">
 <head>
   <meta charset="UTF-8">
-  <title>ویراستار فارسی امـاچ</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ویراستار فارسی ام‌اچ (M.H.)</title>
   <link rel="stylesheet" href="popup.css">
 </head>
 <body>
   <div class="amach-popup-container">
+    <!-- هدر لوکس و اختصاصی ام‌اچ -->
     <header class="popup-header">
       <div class="brand">
-        <span class="logo-emoji">🖊️</span>
-        <div>
-          <h1>امـاچ</h1>
-          <p class="subtitle">دستیار هوشمند نوشتار فارسی</p>
+        <div class="logo-box">
+          <span class="logo-icon">🖊️</span>
+        </div>
+        <div class="brand-text">
+          <div class="title-row">
+            <h1>ویراستار فارسی ام‌اچ</h1>
+            <span class="brand-badge">M.H.</span>
+          </div>
+          <p class="subtitle">دستیار فوق‌سریع پردازش و گرامر زبان فارسی</p>
         </div>
       </div>
-      <a href="../options/options.html" target="_blank" class="settings-link" title="تنظیمات">⚙️</a>
+      <a href="../options/options.html" target="_blank" class="settings-btn" title="تنظیمات پیشرفته" aria-label="تنظیمات">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="3"></circle>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+        </svg>
+      </a>
     </header>
 
-    <div class="editor-area">
-      <textarea id="popup-input" placeholder="متن فارسی خود را اینجا تایپ یا الصاق (Paste) نمایید..."></textarea>
-      <div class="stats-bar" id="stats-bar">
-        <span>تعداد واژگان: <b id="stat-words">۰</b></span>
-        <span>امتیاز رسمیت: <b id="stat-score">۱۰۰</b></span>
+    <!-- کارت ویرایشگر هوشمند متن -->
+    <div class="editor-card">
+      <div class="editor-toolbar">
+        <div class="toolbar-left">
+          <span class="char-counter" id="stat-chars">۰ کاراکتر</span>
+        </div>
+        <div class="toolbar-right">
+          <button type="button" id="btn-paste" class="tool-btn" title="الصاق از کلیپ‌بورد">
+            <span>📋</span> الصاق
+          </button>
+          <button type="button" id="btn-clear" class="tool-btn danger" title="پاک‌سازی کادر">
+            <span>🗑️</span> پاک‌کردن
+          </button>
+        </div>
+      </div>
+
+      <textarea id="popup-input" placeholder="متن فارسی خود را اینجا تایپ کرده یا از صفحه وب الصاق نمایید..."></textarea>
+
+      <!-- نوار سنجش سلامت متن (Live Health Meter) -->
+      <div class="metrics-bar">
+        <div class="metric-group">
+          <span class="metric-pill" id="stat-words-pill">
+            <span class="pill-dot blue"></span>
+            واژگان: <b id="stat-words">۰</b>
+          </span>
+          <span class="metric-pill" id="stat-reading-time">
+            زمان مطالعه: <b id="stat-time">۰ ثانیه</b>
+          </span>
+        </div>
+        <div class="formality-badge" id="formality-indicator">
+          <span class="badge-dot green"></span>
+          <span id="formality-text">رسمی و اداری</span>
+          <span class="score-tag" id="stat-score">۱۰۰٪</span>
+        </div>
       </div>
     </div>
 
+    <!-- ماتریس دکمه‌های عملیاتی -->
     <div class="actions-grid">
-      <button id="btn-normalize" class="btn-action primary" title="اصلاح نیم‌فاصله‌ها و کاراکترها">
-        <span class="icon">✨</span>
-        <span>پاک‌سازی و نیم‌فاصله</span>
+      <button id="btn-normalize" class="btn-action primary" title="نرمال‌سازی حروف، اعشار، ارقام و اصلاح نیم‌فاصله (Alt+Shift+N)">
+        <span class="btn-icon">✨</span>
+        <div class="btn-content">
+          <span class="btn-title">پاک‌سازی و نیم‌فاصله</span>
+          <span class="btn-sub">Alt+Shift+N</span>
+        </div>
       </button>
 
-      <button id="btn-formalize" class="btn-action secondary" title="تبدیل محاوره به اداری">
-        <span class="icon">👔</span>
-        <span>تبدیل به رسمی</span>
+      <button id="btn-formalize" class="btn-action secondary" title="تبدیل عبارات عامیانه و شکسته به متون رسمی اداری (Alt+Shift+F)">
+        <span class="btn-icon">👔</span>
+        <div class="btn-content">
+          <span class="btn-title">تبدیل به نگارش رسمی</span>
+          <span class="btn-sub">Alt+Shift+F</span>
+        </div>
       </button>
 
-      <button id="btn-spell" class="btn-action warning" title="غلط‌یابی املایی">
-        <span class="icon">🔍</span>
-        <span>غلط‌یاب املایی</span>
+      <button id="btn-spell" class="btn-action warning" title="شناسایی اشتباهات املایی با هوش حروف هم‌آوا">
+        <span class="btn-icon">🔍</span>
+        <div class="btn-content">
+          <span class="btn-title">غلط‌یاب هوشمند</span>
+          <span class="btn-sub" id="spell-sub-text">بررسی هم‌آواها</span>
+        </div>
       </button>
 
-      <button id="btn-copy" class="btn-action success" title="کپی متن نهایی">
-        <span class="icon">📋</span>
-        <span>کپی در کلیپ‌بورد</span>
+      <button id="btn-copy" class="btn-action success" title="کپی متن ویرایش‌شده در کلیپ‌بورد">
+        <span class="btn-icon">📋</span>
+        <div class="btn-content">
+          <span class="btn-title">کپی در کلیپ‌بورد</span>
+          <span class="btn-sub" id="copy-sub-text">آماده انتقال</span>
+        </div>
       </button>
     </div>
 
+    <!-- پنل تعاملی نتایج، پیشنهادات و دیف خطاهای املایی -->
     <div id="results-panel" class="results-panel hidden">
       <div class="panel-header">
-        <span id="panel-title">پیشنهادات و خطاهای املایی</span>
-        <button id="btn-close-panel" class="btn-close">&times;</button>
+        <div class="panel-header-title">
+          <span class="panel-icon">💡</span>
+          <span id="panel-title">پیشنهادات هوشمند اصلاح</span>
+        </div>
+        <div class="panel-header-actions">
+          <button id="btn-apply-all" class="btn-apply-all hidden">⚡ اعمال خودکار همه</button>
+          <button id="btn-close-panel" class="btn-close" title="بستن پنل">&times;</button>
+        </div>
       </div>
       <div id="panel-body" class="panel-body"></div>
     </div>
 
+    <!-- فوتر اختصاصی و مینیمال -->
     <footer class="popup-footer">
-      <span>توسعه‌یافته توسط <a href="https://github.com/mhnadali/mh-persian-writer" target="_blank">M.H. Nadali</a></span>
-      <span class="version-tag">v1.0.0</span>
+      <div class="footer-brand">
+        <span>توسعه‌یافته با افتخار توسط</span>
+        <a href="https://github.com/mhnadali/mh-persian-writer" target="_blank">M.H. Nadali</a>
+      </div>
+      <span class="version-tag">M.H. v1.0.0</span>
     </footer>
   </div>
 
