@@ -29,7 +29,14 @@ export type {
   SpellCheckerOptions,
   SpellIssue,
   SpellCheckResult,
+  JalaliDateFormat,
+  JalaliDateResult,
+  DocumentType,
+  DocumentFormat,
+  DocumentData,
+  DocumentOptions,
 } from './types';
+
 
 // ─── Normalizer ──────────────────────────────────────────────────────
 export {
@@ -123,6 +130,27 @@ export {
   fixBrokenPlurals,
   fixCommonTypos,
 } from './spell-checker';
+
+// ─── Jalali Calendar ─────────────────────────────────────────────────
+export {
+  gregorianToJalali,
+  jalaliToGregorian,
+  getJalaliDate,
+  formatJalaliDate,
+  isJalaliLeapYear,
+  JALALI_MONTH_NAMES,
+  PERSIAN_WEEKDAYS,
+} from './jalali';
+
+// ─── Document Builder ────────────────────────────────────────────────
+export {
+  generateDocument,
+  renderTextDocument,
+  renderMarkdownDocument,
+  renderHtmlDocument,
+  getDefaultDocumentTemplate,
+} from './document-builder';
+
 
 // ─── Constants (for advanced users) ──────────────────────────────────
 export {

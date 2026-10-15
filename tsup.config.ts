@@ -11,7 +11,10 @@ export default defineConfig({
     stemmer: 'src/stemmer.ts',
     analyzer: 'src/analyzer.ts',
     'spell-checker': 'src/spell-checker.ts',
+    jalali: 'src/jalali.ts',
+    'document-builder': 'src/document-builder.ts',
   },
+
   format: ['cjs', 'esm'],
   dts: true,
   clean: true,

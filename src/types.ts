@@ -227,3 +227,99 @@ export interface SpellCheckResult {
   /** تعداد واژه‌های بررسی‌شده */
   wordCount: number;
 }
+
+// ─── Jalali Calendar Types ───────────────────────────────────────────
+
+/** فرمت‌های قابل پشتیبانی برای تاریخ جلالی */
+export type JalaliDateFormat =
+  | 'YYYY/MM/DD'
+  | 'YYYY-MM-DD'
+  | 'D MMMM YYYY'
+  | 'dddd D MMMM YYYY'
+  | 'official';
+
+/** نتیجه تبدیل یا استخراج تاریخ جلالی */
+export interface JalaliDateResult {
+  /** سال خورشیدی (مثلاً ۱۴۰۵) */
+  year: number;
+  /** ماه خورشیدی (۱ تا ۱۲) */
+  month: number;
+  /** روز خورشیدی (۱ تا ۳۱) */
+  day: number;
+  /** نام ماه (فروردین، اردیبهشت، ...) */
+  monthName: string;
+  /** نام روز هفته (شنبه، یکشنبه، ...) */
+  dayName: string;
+  /** آیا سال کبیسه خورشیدی است؟ */
+  isLeap: boolean;
+  /** تاریخ فرمت‌شده استاندارد با ارقام انگلیسی */
+  formatted: string;
+  /** تاریخ فرمت‌شده با ارقام فارسی */
+  formattedPersianDigits: string;
+  /** فرمت اداری رسمی کامل (مانند: چهارشنبه ۲۳ مهرماه ۱۴۰۵) */
+  officialFormat: string;
+}
+
+// ─── Document Builder Types ──────────────────────────────────────────
+
+/** انواع اسناد و نامه‌های اداری استاندارد */
+export type DocumentType =
+  | 'leave_request'
+  | 'job_promotion'
+  | 'resignation'
+  | 'meeting_minutes'
+  | 'recommendation_letter'
+  | 'warning_letter'
+  | 'employment_certificate'
+  | 'nda_summary'
+  | 'custom';
+
+/** فرمت‌های خروجی سند اداری */
+export type DocumentFormat = 'text' | 'markdown' | 'html';
+
+/** داده‌های ورودی برای تولید اسناد اداری */
+export interface DocumentData {
+  /** عنوان سند */
+  title?: string;
+  /** شماره نامه / شماره ثبت */
+  letterNumber?: string;
+  /** تاریخ نامه (در صورت خالی بودن، تاریخ روز جلالی درج می‌شود) */
+  date?: string;
+  /** وضعیت پیوست (دارد/ندارد/تعداد برگ) */
+  attachment?: string;
+  /** نام یا عنوان فرستنده */
+  senderName?: string;
+  /** سمت فرستنده */
+  senderTitle?: string;
+  /** نام یا عنوان گیرنده */
+  recipientName?: string;
+  /** سمت گیرنده */
+  recipientTitle?: string;
+  /** نام سازمان، شرکت یا اداره */
+  organization?: string;
+  /** موضوع نامه / سند */
+  subject: string;
+  /** متن اصلی نامه */
+  body: string;
+  /** بندها، تصمیمات یا مصوبات (اختیاری) */
+  clauses?: string[];
+  /** فهرست حاضرین در جلسه (مخصوص صورتجلسه) */
+  attendees?: string[];
+  /** متن امضا و تشکر پایانی */
+  signatureText?: string;
+  /** رونوشت‌ها (ارسال رونوشت به بخش‌های دیگر) */
+  copiesTo?: string[];
+}
+
+/** تنظیمات تولید سند اداری */
+export interface DocumentOptions {
+  /** فرمت خروجی (پیش‌فرض: text) */
+  format?: DocumentFormat;
+  /** تبدیل اعداد به ارقام فارسی */
+  persianDigits?: boolean;
+  /** درج خودکار تاریخ امروز جلالی در صورت عدم تعیین */
+  autoDate?: boolean;
+  /** نام سربرگ سازمانی (اختیاری) */
+  headerTitle?: string;
+}
+

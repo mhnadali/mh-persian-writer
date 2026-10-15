@@ -50,8 +50,19 @@
       "types": "./dist/spell-checker.d.ts",
       "import": "./dist/spell-checker.mjs",
       "require": "./dist/spell-checker.js"
+    },
+    "./jalali": {
+      "types": "./dist/jalali.d.ts",
+      "import": "./dist/jalali.mjs",
+      "require": "./dist/jalali.js"
+    },
+    "./document-builder": {
+      "types": "./dist/document-builder.d.ts",
+      "import": "./dist/document-builder.mjs",
+      "require": "./dist/document-builder.js"
     }
   },
+
 
   "files": [
     "dist",
