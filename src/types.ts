@@ -52,6 +52,21 @@ export interface TokenizerOptions {
 /** سطح رسمیت نوشتار */
 export type FormalityLevel = 'formal' | 'semi-formal' | 'informal';
 
+/** حالت‌های تنظیم لحن و رسمیت متن */
+export type FormalityMode =
+  | 'administrative'    // نامه‌ها و مکاتبات رسمی اداری و سازمانی (پیش‌فرض)
+  | 'academic'          // مقالات علمی، پژوهشی و نگارش دانشگاهی
+  | 'customer-support'  // مکاتبات محترمانه خدمات مشتریان و ایمیل‌های کاری
+  | 'colloquial-cleanup'; // پالایش صرف متون محاوره‌ای و شکسته به فارسی معیار روان
+
+/** تنظیمات ماژول رسمی‌سازی */
+export interface FormalityOptions {
+  /** حالت لحن نگارش */
+  mode?: FormalityMode;
+  /** بررسی علائم نگارشی پایان جمله */
+  checkPunctuation?: boolean;
+}
+
 /** نتیجه بررسی رسمیت */
 export interface FormalityCheckResult {
   /** سطح رسمیت */
