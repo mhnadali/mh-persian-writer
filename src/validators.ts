@@ -15,14 +15,43 @@ import { toEnglishDigits } from './numbers';
  * @param {string} code - The National ID to validate
  * @returns {ValidationResult} The validation result
  */
+/**
+ * Helper to determine Iranian mobile operator from 10-digit mobile number (e.g. 9123456789)
+ */
+function getMobileOperator(number10Digits: string): string {
+  const prefix3 = number10Digits.substring(0, 3);
+
+  if (/^9(1[0-9]|9[0-46])/.test(number10Digits)) return 'همراه اول';
+  if (/^9(3[035-9]|0[1-5]|41)/.test(number10Digits)) return 'ایرانسل';
+  if (/^92[0-3]/.test(number10Digits)) return 'رایتل';
+  if (prefix3 === '998') return 'شاتل موبایل';
+  if (prefix3 === '999') return 'سامانتل';
+  if (prefix3 === '932') return 'تالیا';
+  if (prefix3 === '934') return 'تله‌کیش';
+
+  return 'اپراتور همراه';
+}
+
+/**
+ * Validates a 10-digit Iranian National ID (کد ملی).
+ *
+ * @param {string} code - The National ID to validate
+ * @returns {ValidationResult} The validation result
+ */
 export function validateNationalId(code: string): ValidationResult {
-  const normalized = toEnglishDigits(code);
+  if (!code) {
+    return { isValid: false, errorMessage: 'کد ملی وارد نشده است.' };
+  }
+  const raw = toEnglishDigits(code).replace(/[\s-]/g, '');
+  
+  // Support auto-padding leading zeros if 8 or 9 digits are entered
+  const normalized = raw.length >= 8 && raw.length <= 10 ? raw.padStart(10, '0') : raw;
   
   if (!/^\d{10}$/.test(normalized)) {
     return { isValid: false, errorMessage: 'کد ملی باید دقیقاً ۱۰ رقم باشد.' };
   }
 
-  // All digits shouldn't be the same
+  // All digits shouldn't be the same (e.g. 0000000000 or 1111111111)
   if (/^(\d)\1{9}$/.test(normalized)) {
     return { isValid: false, errorMessage: 'کد ملی نامعتبر است.' };
   }
@@ -131,7 +160,8 @@ export function validatePhoneNumber(phone: string): ValidationResult {
   const mobileMatch = normalized.match(mobileRegex);
   
   if (mobileMatch) {
-    return { isValid: true, metadata: { type: 'mobile' } };
+    const operator = getMobileOperator(mobileMatch[1]);
+    return { isValid: true, metadata: { type: 'mobile', operator } };
   }
 
   // Landline check (requires province code if with zero, e.g., 021...)
@@ -152,18 +182,24 @@ export function validatePhoneNumber(phone: string): ValidationResult {
  * @returns {ValidationResult} The validation result
  */
 export function validatePostalCode(code: string): ValidationResult {
+  if (!code) {
+    return { isValid: false, errorMessage: 'کد پستی وارد نشده است.' };
+  }
   const normalized = toEnglishDigits(code).replace(/\s/g, '').replace(/-/g, '');
 
-  // Iranian postal codes cannot contain 0 or 2 in the first 5 digits
-  // and must be exactly 10 digits
+  // Iranian postal codes must be exactly 10 digits
   if (!/^\d{10}$/.test(normalized)) {
-     return { isValid: false, errorMessage: 'کد پستی باید دقیقاً ۱۰ رقم باشد.' };
+    return { isValid: false, errorMessage: 'کد پستی باید دقیقاً ۱۰ رقم باشد.' };
   }
   
-  // Basic validation for postal code:
-  // Cannot start with 0 or 2
-  if (/^[02]/.test(normalized)) {
-      return { isValid: false, errorMessage: 'کد پستی نمی‌تواند با ۰ یا ۲ شروع شود.' };
+  // The first 5 digits identify the delivery zone and cannot contain 0 or 2
+  if (!/^[13-9]{5}\d{5}$/.test(normalized)) {
+    return { isValid: false, errorMessage: 'پنج رقم اول کد پستی نمی‌تواند شامل ارقام ۰ یا ۲ باشد.' };
+  }
+
+  // First 4 digits cannot be all identical
+  if (/^(\d)\1{3}/.test(normalized)) {
+    return { isValid: false, errorMessage: 'چهار رقم اول کد پستی نمی‌تواند یکسان باشد.' };
   }
 
   return { isValid: true };

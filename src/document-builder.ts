@@ -286,7 +286,15 @@ export function renderHtmlDocument(
   const today = getJalaliDate();
   const dateStr = data.date || (autoDate ? today.formattedPersianDigits : today.formatted);
 
-  const title = data.title || 'مکاتبه اداری';
+  const toP = (s?: string) => {
+    if (!s) return '';
+    return persianDigits ? toPersianDigits(s) : s;
+  };
+
+  const title = toP(options.headerTitle || data.title || 'مکاتبه اداری');
+  const safeDateStr = toP(dateStr);
+  const safeSubject = toP(data.subject);
+  const safeBody = toP(data.body);
 
   let clausesHtml = '';
   if (data.clauses && data.clauses.length > 0) {
@@ -294,7 +302,7 @@ export function renderHtmlDocument(
       <div class="clauses-section">
         <h3>بندها و مقررات:</h3>
         <ol>
-          ${data.clauses.map(c => `<li>${c}</li>`).join('\n')}
+          ${data.clauses.map(c => `<li>${toP(c)}</li>`).join('\n')}
         </ol>
       </div>
     `;
@@ -305,7 +313,7 @@ export function renderHtmlDocument(
     attendeesHtml = `
       <div class="attendees-section">
         <h3>حاضرین در جلسه:</h3>
-        <p>${data.attendees.join(' &bull; ')}</p>
+        <p>${data.attendees.map(a => toP(a)).join(' &bull; ')}</p>
       </div>
     `;
   }
@@ -316,7 +324,7 @@ export function renderHtmlDocument(
       <div class="copies-section">
         <strong>رونوشت:</strong>
         <ul>
-          ${data.copiesTo.map(c => `<li>${c}</li>`).join('\n')}
+          ${data.copiesTo.map(c => `<li>${toP(c)}</li>`).join('\n')}
         </ul>
       </div>
     `;
@@ -427,35 +435,35 @@ export function renderHtmlDocument(
       <div style="width: 120px;"></div>
       <div class="header-center">
         <div class="bismillah">بسمه تعالی</div>
-        <h1>${options.headerTitle || title}</h1>
+        <h1>${title}</h1>
       </div>
       <div class="header-meta">
-        <div><strong>تاریخ:</strong> ${dateStr}</div>
-        ${data.letterNumber ? `<div><strong>شماره:</strong> ${data.letterNumber}</div>` : ''}
-        ${data.attachment ? `<div><strong>پیوست:</strong> ${data.attachment}</div>` : ''}
+        <div><strong>تاریخ:</strong> ${safeDateStr}</div>
+        ${data.letterNumber ? `<div><strong>شماره:</strong> ${toP(data.letterNumber)}</div>` : ''}
+        ${data.attachment ? `<div><strong>پیوست:</strong> ${toP(data.attachment)}</div>` : ''}
       </div>
     </div>
 
     ${data.recipientTitle ? `
     <div class="recipient-block">
-      جناب آقای / سرکار خانم ${[data.recipientTitle, data.recipientName].filter(Boolean).join(' ')}<br>
-      ${data.organization ? `<span style="font-weight: normal; color: #64748b;">${data.organization}</span>` : ''}
+      جناب آقای / سرکار خانم ${toP([data.recipientTitle, data.recipientName].filter(Boolean).join(' '))}<br>
+      ${data.organization ? `<span style="font-weight: normal; color: #64748b;">${toP(data.organization)}</span>` : ''}
     </div>` : ''}
 
     <div class="subject-block">
-      <strong>موضوع:</strong> ${data.subject}
+      <strong>موضوع:</strong> ${safeSubject}
     </div>
 
     <div class="letter-body">
-      ${data.body}
+      ${safeBody}
     </div>
 
     ${clausesHtml}
     ${attendeesHtml}
 
     <div class="letter-signature">
-      <div class="title">${data.signatureText ? data.signatureText.replace(/\n/g, '<br>') : 'با احترام'}</div>
-      ${data.senderName ? `<div style="margin-top: 8px;">${data.senderName}</div>` : ''}
+      <div class="title">${data.signatureText ? toP(data.signatureText).replace(/\n/g, '<br>') : 'با احترام'}</div>
+      ${data.senderName ? `<div style="margin-top: 8px;">${toP(data.senderName)}</div>` : ''}
     </div>
 
     ${copiesHtml}
@@ -463,7 +471,7 @@ export function renderHtmlDocument(
 </body>
 </html>`;
 
-  return persianDigits ? toPersianDigits(html) : html;
+  return html;
 }
 
 /**

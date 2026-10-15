@@ -77,10 +77,11 @@ export function tokenizeWords(text: string, options: TokenizerOptions = {}): Tok
   
   // Regex matches words (including ZWNJ), numbers, or punctuation/other characters
   // \p{L}: Letters
+  // \p{L}: Letters
   // \p{M}: Marks (Diacritics)
   // \p{N}: Numbers
   // \u200C: ZWNJ
-  const regex = /([\p{L}\p{M}\u200C]+)|([\p{N}\.]+)|([^\s\p{L}\p{N}\p{M}\u200C])/gu;
+  const regex = /([\p{L}\p{M}\u200C]+)|(\p{N}+(?:[.,/٬،]\p{N}+)*)|([^\s\p{L}\p{N}\p{M}\u200C])/gu;
   
   let match;
   while ((match = regex.exec(processingText)) !== null) {
@@ -92,15 +93,12 @@ export function tokenizeWords(text: string, options: TokenizerOptions = {}): Tok
       tokens.push(wordMatch);
     } else if (numberMatch) {
       if (keepNumbers) {
-        // Exclude standalone dots that might be captured as numbers
-        if (numberMatch === '.') {
-            if (keepPunctuation) tokens.push(numberMatch);
-        } else {
-            tokens.push(numberMatch);
-        }
+        tokens.push(numberMatch);
       }
     } else if (punctMatch) {
-      if (keepPunctuation) tokens.push(punctMatch);
+      if (keepPunctuation) {
+        tokens.push(punctMatch);
+      }
     }
   }
 

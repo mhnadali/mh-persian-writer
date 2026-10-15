@@ -125,14 +125,17 @@ export function fixHalfSpace(text: string): string {
   if (!text) return '';
   let result = text;
 
-  // Add ZWNJ after prefixes (می and نمی) before verb
-  result = result.replace(/(^|\s)(می|نمی)\s+([^ \n\r\t]+)/g, `$1$2${ZWNJ}$3`);
+  // Add ZWNJ after prefixes (می, نمی, بی)
+  result = result.replace(/(^|\s)(می|نمی|بی)\s+([^ \n\r\t]+)/gu, `$1$2${ZWNJ}$3`);
 
-  // Add ZWNJ before suffixes (ها, های, هایی, تر, ترین)
-  result = result.replace(/([^ \n\r\t\u200C]+)\s+(ها|های|هایی|تر|ترین)(?=[ \t\n\r،؛!؟\.]|$)/gu, `$1${ZWNJ}$2`);
+  // Add ZWNJ before suffixes (ها, های, هایی, تر, ترین, تری)
+  result = result.replace(/([^ \n\r\t\u200C]+)\s+(ها|های|هایی|تر|ترین|تری)(?=[ \t\n\r،؛!؟\.]|$)/gu, `$1${ZWNJ}$2`);
 
-  // Convert space + suffix to ZWNJ + suffix
-  result = result.replace(/([^ \n\r\t\u200C]+)\s+(ام|ات|اش|ای|اید|اند)(?=[ \t\n\r،؛!؟\.]|$)/gu, `$1${ZWNJ}$2`);
+  // Standard Academy Ezafe normalization for words ending with silent Heh (ه ی -> ه‌ی)
+  result = result.replace(/([^ \n\r\t\u200C]+ه)\s+ی(?=[ \t\n\r،؛!؟\.]|$)/gu, `$1${ZWNJ}ی`);
+
+  // Convert space + suffix to ZWNJ + suffix for verbal/pronominal endings
+  result = result.replace(/([^ \n\r\t\u200C]+)\s+(ام|ات|اش|اید|اند)(?=[ \t\n\r،؛!؟\.]|$)/gu, `$1${ZWNJ}$2`);
 
   // Remove duplicate ZWNJs
   const zwnjRegex = new RegExp(`${ZWNJ}{2,}`, 'g');

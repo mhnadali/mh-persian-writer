@@ -27,28 +27,40 @@ export function suggestFormalAlternative(word: string): string | null {
  * @returns Array of formality issues
  */
 export function detectInformalWords(text: string): FormalityIssue[] {
+  if (!text) return [];
   const issues: FormalityIssue[] = [];
-  
-  // Using a regex to find words, considering Persian characters
-  const wordsRegex = /[آ-ی]+/g;
-  let match;
-  
-  while ((match = wordsRegex.exec(text)) !== null) {
-    const word = match[0];
-    const suggestion = suggestFormalAlternative(word);
-    
-    if (suggestion) {
-      issues.push({
-        word,
-        suggestion,
-        position: match.index,
-        type: 'informal_word',
-        severity: 'medium' // Defaulting to medium for general informal words
-      });
+  const matchedSpans: Array<{ start: number; end: number }> = [];
+
+  const sortedEntries = Object.entries(INFORMAL_TO_FORMAL_MAP).sort(
+    (a, b) => b[0].length - a[0].length
+  );
+
+  for (const [informal, formal] of sortedEntries) {
+    const escaped = informal.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const regex = new RegExp(`(?<=^|[\\s،؛.!?؟()«»"'\\[\\]{}:–—-])${escaped}(?=[\\s،؛.!?؟()«»"'\\[\\]{}:–—-]|$)`, 'gu');
+    let match;
+    while ((match = regex.exec(text)) !== null) {
+      const start = match.index;
+      const end = start + informal.length;
+
+      const overlaps = matchedSpans.some(span => 
+        (start >= span.start && start < span.end) || (end > span.start && end <= span.end)
+      );
+
+      if (!overlaps) {
+        matchedSpans.push({ start, end });
+        issues.push({
+          word: informal,
+          suggestion: formal,
+          position: start,
+          type: 'informal_word',
+          severity: 'medium'
+        });
+      }
     }
   }
-  
-  return issues;
+
+  return issues.sort((a, b) => a.position - b.position);
 }
 
 /**
@@ -134,18 +146,21 @@ export function checkFormality(text: string): FormalityCheckResult {
  * @returns Formalized text
  */
 export function toFormal(text: string): string {
+  if (!text) return '';
   let result = text;
   
-  // Replace words based on INFORMAL_TO_FORMAL_MAP
-  // We use word boundaries and lookarounds for Persian words
-  for (const [informal, formal] of Object.entries(INFORMAL_TO_FORMAL_MAP)) {
-    // A regex to match the exact word, not part of another word
-    const regex = new RegExp(`(?<=^|[\\s،؛.!?؟()])${informal}(?=[\\s،؛.!?؟()]|$)`, 'g');
+  const sortedEntries = Object.entries(INFORMAL_TO_FORMAL_MAP).sort(
+    (a, b) => b[0].length - a[0].length
+  );
+
+  for (const [informal, formal] of sortedEntries) {
+    const escaped = informal.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const regex = new RegExp(`(?<=^|[\\s،؛.!?؟()«»"'\\[\\]{}:–—-])${escaped}(?=[\\s،؛.!?؟()«»"'\\[\\]{}:–—-]|$)`, 'gu');
     result = result.replace(regex, formal);
   }
   
   // Basic ZWNJ spacing fix (e.g., 'می ' -> 'می‌')
-  result = result.replace(/\b(می|نمی)\s+([آ-ی]+)\b/g, `$1${ZWNJ}$2`);
+  result = result.replace(/(^|\s)(می|نمی)\s+([آ-ی]+)/gu, `$1$2${ZWNJ}$3`);
   
   return result;
 }

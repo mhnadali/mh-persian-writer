@@ -12,6 +12,16 @@ function getTokens(result: any): string[] {
   return [];
 }
 
+const PERSIAN_EXTENDED_CHARS = new Set<string>([
+  ...PERSIAN_ALPHABET,
+  'ء', 'ئ', 'ؤ', 'ة', 'ۀ', 'إ', 'أ',
+  '\u0654', // Combining Hamza Above (used in هٔ)
+  '\u064B', '\u064C', '\u064D', '\u064E', '\u064F', '\u0650', '\u0651', '\u0652', '\u0670', // Diacritics
+  '۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹',
+  ZWNJ,
+  '،', '؛', '؟', '«', '»', '٪',
+]);
+
 /**
  * Counts the number of Persian characters in a text.
  * @param text The input text
@@ -19,9 +29,8 @@ function getTokens(result: any): string[] {
  */
 export function countPersianChars(text: string): number {
   let count = 0;
-  const persianCharSet = new Set<string>(PERSIAN_ALPHABET);
   for (const char of text) {
-    if (persianCharSet.has(char)) {
+    if (PERSIAN_EXTENDED_CHARS.has(char)) {
       count++;
     }
   }
@@ -50,16 +59,14 @@ export function detectLanguage(text: string): 'persian' | 'arabic' | 'english' |
 
   let persianCount = countPersianChars(chars);
   let englishCount = (chars.match(/[a-zA-Z]/g) || []).length;
-  // Simple check for specific Arabic chars not in standard Persian alphabet array (like ي, ك, ة)
-  let arabicCount = (chars.match(/[يىكَة]/g) || []).length;
+  // Specific Arabic characters not part of standard Persian alphabet
+  let arabicOnlyCount = (chars.match(/[يىكَة\u064B-\u064D]/g) || []).length;
 
-  // Add common Arabic alphabet that overlaps to arabic count if they are the primary script
-  // But since we want simple detection, let's just use ratios
   const total = chars.length;
   
-  if (persianCount / total > 0.5) return 'persian';
   if (englishCount / total > 0.5) return 'english';
-  if (arabicCount / total > 0.5) return 'arabic';
+  if (arabicOnlyCount / total >= 0.10) return 'arabic';
+  if (persianCount / total > 0.5) return 'persian';
   
   return 'mixed';
 }

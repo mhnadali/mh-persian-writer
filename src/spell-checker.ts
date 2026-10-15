@@ -235,8 +235,13 @@ export function fixBrokenPlurals(text: string): string {
   if (!text) return '';
   let result = text;
 
-  for (const [broken, standard] of Object.entries(BROKEN_PLURALS_MAP)) {
-    const regex = new RegExp(`(?<=^|[\\s،؛.!?؟()])${broken}(?=[\\s،؛.!?؟()]|$)`, 'gu');
+  const sorted = Object.entries(BROKEN_PLURALS_MAP).sort(
+    (a, b) => b[0].length - a[0].length
+  );
+
+  for (const [broken, standard] of sorted) {
+    const escaped = broken.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const regex = new RegExp(`(?<=^|[\\s،؛.!?؟()«»"'\\[\\]{}:–—-])${escaped}(?=[\\s،؛.!?؟()«»"'\\[\\]{}:–—-]|$)`, 'gu');
     result = result.replace(regex, standard);
   }
 
@@ -253,8 +258,13 @@ export function fixCommonTypos(text: string): string {
   if (!text) return '';
   let result = text;
 
-  for (const [typo, correct] of Object.entries(COMMON_TYPOS)) {
-    const regex = new RegExp(`(?<=^|[\\s،؛.!?؟()])${typo}(?=[\\s،؛.!?؟()]|$)`, 'gu');
+  const sorted = Object.entries(COMMON_TYPOS).sort(
+    (a, b) => b[0].length - a[0].length
+  );
+
+  for (const [typo, correct] of sorted) {
+    const escaped = typo.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const regex = new RegExp(`(?<=^|[\\s،؛.!?؟()«»"'\\[\\]{}:–—-])${escaped}(?=[\\s،؛.!?؟()«»"'\\[\\]{}:–—-]|$)`, 'gu');
     result = result.replace(regex, correct);
   }
 
@@ -329,7 +339,8 @@ export function spellCheck(
       });
 
       // جایگزینی کلمه نادرست با بهترین پیشنهاد در متن اصلاح‌شده
-      const wordRegex = new RegExp(`(?<=^|[\\s،؛.!?؟()])${word}(?=[\\s،؛.!?؟()]|$)`, 'gu');
+      const escapedWord = word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const wordRegex = new RegExp(`(?<=^|[\\s،؛.!?؟()«»"'\\[\\]{}:–—-])${escapedWord}(?=[\\s،؛.!?؟()«»"'\\[\\]{}:–—-]|$)`, 'gu');
       corrected = corrected.replace(wordRegex, bestSuggestion);
     }
   }

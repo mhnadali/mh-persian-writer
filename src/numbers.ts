@@ -47,26 +47,58 @@ export function toWords(num: number): string {
   if (!Number.isFinite(num)) return num.toString();
 
   const isNegative = num < 0;
-  let absoluteNum = Math.abs(num);
+  const numStr = Math.abs(num).toString();
+  const [intPartStr, decPartStr] = numStr.split('.');
+
+  let intNum = parseInt(intPartStr, 10);
   const chunks: string[] = [];
   let scaleIndex = 0;
 
-  while (absoluteNum > 0 && scaleIndex < PERSIAN_SCALES.length) {
-    const chunk = absoluteNum % 1000;
-    if (chunk > 0) {
-      const chunkStr = getChunkWords(chunk);
-      if (scaleIndex > 0) {
-        chunks.push(chunkStr + ' ' + PERSIAN_SCALES[scaleIndex]);
-      } else {
-        chunks.push(chunkStr);
+  if (intNum === 0) {
+    chunks.push('صفر');
+  } else {
+    while (intNum > 0 && scaleIndex < PERSIAN_SCALES.length) {
+      const chunk = intNum % 1000;
+      if (chunk > 0) {
+        const chunkStr = getChunkWords(chunk);
+        if (scaleIndex > 0) {
+          chunks.push(chunkStr + ' ' + PERSIAN_SCALES[scaleIndex]);
+        } else {
+          chunks.push(chunkStr);
+        }
       }
+      intNum = Math.floor(intNum / 1000);
+      scaleIndex++;
     }
-    absoluteNum = Math.floor(absoluteNum / 1000);
-    scaleIndex++;
   }
 
-  const result = chunks.reverse().join(' و ');
-  return isNegative ? 'منفی ' + result : result;
+  let result = chunks.reverse().join(' و ');
+  if (isNegative) result = 'منفی ' + result;
+
+  // Handle decimal part if present
+  if (decPartStr && decPartStr.length > 0) {
+    const decNum = parseInt(decPartStr, 10);
+    if (decNum > 0) {
+      const decWords = toWords(decNum);
+      const decPlaces = decPartStr.length;
+      let unit = '';
+      if (decPlaces === 1) unit = 'دهم';
+      else if (decPlaces === 2) unit = 'صدم';
+      else if (decPlaces === 3) unit = 'هزارم';
+      else if (decPlaces === 4) unit = 'ده‌هزارم';
+      else if (decPlaces === 5) unit = 'صدهزارم';
+      else if (decPlaces === 6) unit = 'میلیونیم';
+      else unit = 'ممیز ' + decWords;
+
+      if (unit.startsWith('ممیز')) {
+        result += ' ' + unit;
+      } else {
+        result += ` و ${decWords} ${unit}`;
+      }
+    }
+  }
+
+  return result;
 }
 
 

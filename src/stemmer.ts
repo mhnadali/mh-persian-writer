@@ -40,7 +40,7 @@ export function removePrefix(word: string): { base: string; prefix: string } {
         base: word.slice(prefix.length + 1),
         prefix: prefix
       };
-    } else if (word.startsWith(prefix) && word.length > prefix.length + 2) {
+    } else if (word.startsWith(prefix) && word.length > prefix.length + 2 && (prefix === 'می' || prefix === 'نمی')) {
       return {
         base: word.slice(prefix.length),
         prefix: prefix
@@ -58,10 +58,19 @@ export function removePrefix(word: string): { base: string; prefix: string } {
  * @returns True if the word is likely a verb
  */
 export function isVerb(word: string): boolean {
-  if (word.startsWith('می' + ZWNJ) || word.startsWith('نمی' + ZWNJ) || word.startsWith('ب')) {
+  if (word.startsWith('می' + ZWNJ) || word.startsWith('نمی' + ZWNJ)) {
     return true;
   }
   
+  // If starting with imperative prefix 'ب', verify that the remainder has a verb stem
+  if (word.startsWith('ب') && word.length >= 3) {
+    const withoutB = word.slice(1);
+    const { base: pureWithoutB } = removeSuffix(withoutB);
+    if (VERB_STEMS[pureWithoutB] || Object.values(VERB_STEMS).includes(pureWithoutB)) {
+      return true;
+    }
+  }
+
   const { base: noPrefixBase } = removePrefix(word);
   const { base: pureBase } = removeSuffix(noPrefixBase);
 
