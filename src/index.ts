@@ -38,6 +38,11 @@ export type {
   LLMTargetTone,
   PreparedLLMInput,
   HybridPipelineOptions,
+  ScanIssueType,
+  ScanIssue,
+  ScanResult,
+  FileProcessOptions,
+  ScanSummary,
 } from './types';
 
 
@@ -163,7 +168,17 @@ export {
   createHybridPipeline,
 } from './llm-adapter';
 
-
+// ─── Document Scanner & Diff (CLI 2.0) ──────────────────────────────
+export {
+  scanText,
+  processFile,
+  scanDirectoryOrFiles,
+  processMarkdown,
+  processHtml,
+  processJson,
+  renderColoredDiff,
+  colors as terminalColors,
+} from './document-scanner';
 
 // ─── Constants (for advanced users) ──────────────────────────────────
 export {

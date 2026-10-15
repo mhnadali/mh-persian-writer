@@ -64,6 +64,11 @@
       "import": "./dist/document-builder.mjs",
       "require": "./dist/document-builder.js"
     },
+    "./document-scanner": {
+      "types": "./dist/document-scanner.d.ts",
+      "import": "./dist/document-scanner.mjs",
+      "require": "./dist/document-scanner.js"
+    },
     "./llm-adapter": {
       "types": "./dist/llm-adapter.d.ts",
       "import": "./dist/llm-adapter.mjs",

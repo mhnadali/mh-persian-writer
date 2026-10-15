@@ -15,6 +15,7 @@ export default defineConfig([
       'spell-checker': 'src/spell-checker.ts',
       jalali: 'src/jalali.ts',
       'document-builder': 'src/document-builder.ts',
+      'document-scanner': 'src/document-scanner.ts',
       'llm-adapter': 'src/llm-adapter.ts',
       cli: 'src/cli.ts',
     },

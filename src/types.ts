@@ -371,4 +371,70 @@ export interface HybridPipelineOptions {
   enforceFarhangestanRules?: boolean;
 }
 
+// ─── Document Scanner & CLI 2.0 Types ────────────────────────────────
+
+/** نوع مشکل یافت‌شده در اسکن سند */
+export type ScanIssueType = 'spelling' | 'spacing' | 'punctuation' | 'informal';
+
+/** جزئیات یک مشکل یافت‌شده در اسناد */
+export interface ScanIssue {
+  /** نوع مشکل */
+  type: ScanIssueType;
+  /** شماره خط در فایل (۱-مبنا) */
+  line: number;
+  /** شماره ستون در خط (۱-مبنا) */
+  column: number;
+  /** واژه یا بخش دارای اشکال */
+  matched: string;
+  /** پیشنهاد اصلاحی */
+  suggestion: string;
+  /** پیام توضیحی */
+  message: string;
+}
+
+/** نتیجه اسکن متن یا فایل */
+export interface ScanResult {
+  /** مسیر فایل اسکن‌شده (در صورت وجود) */
+  filePath?: string;
+  /** آیا متن بدون اشکال است */
+  isValid: boolean;
+  /** فهرست مشکلات یافت‌شده */
+  issues: ScanIssue[];
+  /** متن اصلاح‌شده */
+  fixedText: string;
+  /** آیا تغییری در متن اصلی ایجاد شده است */
+  hasChanges: boolean;
+}
+
+/** گزینه‌های پردازش فایل */
+export interface FileProcessOptions {
+  /** حالت پردازش: 'normalize' (پیش‌فرض) | 'formal' | 'spell' | 'all' */
+  mode?: 'normalize' | 'formal' | 'spell' | 'all';
+  /** لحن رسمی‌سازی در صورت انتخاب formal یا all */
+  formalityMode?: FormalityMode;
+  /** بازنویسی مستقیم روی فایل در صورت وجود تغییرات */
+  write?: boolean;
+  /** تولید دیف رنگی */
+  diff?: boolean;
+  /** واژه‌نامه اختصاصی برای غلط‌یاب */
+  customDictionary?: string[];
+  /** بررسی سخت‌گیرانه برای CI/CD */
+  strict?: boolean;
+}
+
+/** خلاصه اسکن دسته‌جمعی */
+export interface ScanSummary {
+  /** کل فایل‌های بررسی‌شده */
+  totalFiles: number;
+  /** فایل‌های دارای اشکال */
+  filesWithIssues: number;
+  /** تعداد کل مشکلات */
+  totalIssues: number;
+  /** زمان اجرای اسکن (میلی‌ثانیه) */
+  durationMs: number;
+  /** نتایج فایل‌ها */
+  results: ScanResult[];
+}
+
+
 
