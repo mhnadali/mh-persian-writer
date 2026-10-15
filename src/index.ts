@@ -35,7 +35,11 @@ export type {
   DocumentFormat,
   DocumentData,
   DocumentOptions,
+  LLMTargetTone,
+  PreparedLLMInput,
+  HybridPipelineOptions,
 } from './types';
+
 
 
 // ─── Normalizer ──────────────────────────────────────────────────────
@@ -150,6 +154,15 @@ export {
   renderHtmlDocument,
   getDefaultDocumentTemplate,
 } from './document-builder';
+
+// ─── LLM Hybrid Adapter ──────────────────────────────────────────────
+export {
+  prepareTextForLLM,
+  getSystemPromptForTone,
+  postProcessLLMOutput,
+  createHybridPipeline,
+} from './llm-adapter';
+
 
 
 // ─── Constants (for advanced users) ──────────────────────────────────

@@ -26,10 +26,16 @@
 | 🔤 **نرمال‌ساز** | اصلاح کاراکتر عربی←فارسی، نیم‌فاصله، اعراب، فاصله‌گذاری |
 | ✂️ **توکنایزر** | تفکیک کلمات و جملات، شمارش واژگان |
 | 📝 **نوشتار اداری** | بررسی رسمیت، تبدیل محاوره←رسمی، قالب نامه اداری |
+| 🔍 **غلط‌یاب املایی** | الگوریتم وزن‌دار Damerau-Levenshtein، حروف هم‌آوا و جمع‌های مکسر |
+| 📅 **تقویم جلالی** | تبدیل متقارن و دقیق میلادی↔شمسی بدون وابستگی، سال کبیسه، فرمت اداری |
+| 📄 **سندساز اداری** | تولید ۸ سند استاندارد با خروجی‌های متنی، Markdown و HTML آماده پرینت |
+| 🤖 **آداپتور هوش مصنوعی** | پایپ‌لاین هیبریدی اتصال به مدل‌های LLM با پرامپت‌های استاندارد |
 | 🔢 **اعداد** | تبدیل عدد به حروف، ارقام فارسی/عربی/انگلیسی، واحد پول |
 | ✅ **اعتبارسنجی** | کد ملی، کارت بانکی، شبا، شماره تلفن، کد پستی |
 | 🌿 **ریشه‌یابی** | استخراج ریشه واژگان، تشخیص فعل، بن مضارع/ماضی |
 | 📊 **تحلیل‌گر** | آمار متن، فراوانی واژگان، شاخص خوانایی، تشخیص زبان |
+| 💻 **خط فرمان CLI** | ابزار مستقل برای اجرای تمامی دستورات در ترمینال |
+
 
 </div>
 
@@ -259,22 +265,29 @@ detectLanguage('Hello!');  // → 'english'
 ```
 mh-persian-writer/
 ├── src/
-│   ├── index.ts          # Main exports
-│   ├── types.ts          # Type definitions
-│   ├── constants.ts      # Constants & data
-│   ├── normalizer.ts     # Text normalization
-│   ├── tokenizer.ts      # Tokenization
-│   ├── formal-writer.ts  # Formal writing checker
-│   ├── numbers.ts        # Number utilities
-│   ├── validators.ts     # Data validators
-│   ├── stemmer.ts        # Word stemming
-│   └── analyzer.ts       # Text analysis
-├── tests/                # Test suite
-├── examples/             # Usage examples
+│   ├── index.ts            # Main entry point & barrel exports
+│   ├── types.ts            # Full TypeScript definitions
+│   ├── constants.ts        # Persian linguistic data & lexicons
+│   ├── normalizer.ts       # Text normalization & ZWNJ fixes
+│   ├── tokenizer.ts        # Words & sentences tokenization
+│   ├── formal-writer.ts    # Formality scoring & formal conversion
+│   ├── spell-checker.ts    # Damerau-Levenshtein & homophones engine
+│   ├── jalali.ts           # Zero-dep Jalali calendar engine
+│   ├── document-builder.ts # Administrative document & template builder
+│   ├── llm-adapter.ts      # LLM hybrid pipeline & prompt engineering
+│   ├── cli.ts              # Standalone CLI interface
+│   ├── numbers.ts          # Number utilities & toWords
+│   ├── validators.ts       # Iranian ID, card, IBAN & phone validators
+│   ├── stemmer.ts          # Word stemming & broken plurals
+│   └── analyzer.ts         # Readability & text analysis
+├── tests/                  # Complete Vitest test suite (46 tests)
+├── examples/               # Basic & advanced usage examples
+├── SKILL.md                # Antigravity AI Agent Skill
 ├── package.json
 ├── tsconfig.json
 └── README.md
 ```
+
 
 ---
 

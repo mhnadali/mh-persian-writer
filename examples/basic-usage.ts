@@ -35,7 +35,15 @@ import {
   isPersian,
   detectLanguage,
   getSummaryStats,
+  spellCheck,
+  fixCommonTypos,
+  fixBrokenPlurals,
+  getJalaliDate,
+  formatJalaliDate,
+  generateDocument,
+  prepareTextForLLM,
 } from '../src/index';
+
 
 // ═══════════════════════════════════════════════════════════════════════
 // 🔤 نرمال‌ساز (Normalizer)
@@ -159,3 +167,55 @@ console.log('Word Frequency:', getWordFrequency(analysisText, 5));
 console.log('Is Persian:', isPersian(analysisText));
 console.log('Language:', detectLanguage(analysisText));
 console.log('Summary:', getSummaryStats(analysisText));
+
+// ═══════════════════════════════════════════════════════════════════════
+// 🔍 غلط‌یاب املایی (Spell Checker)
+// ═══════════════════════════════════════════════════════════════════════
+
+console.log('\n═══ غلط‌یاب املایی ═══');
+
+const typoText = 'لطفا گذارش را برای مسعول اداره ارسال نمایید.';
+const spellResult = spellCheck(typoText);
+console.log('Original with typos:', typoText);
+console.log('Spell check valid:', spellResult.isValid);
+console.log('Detected issues:', spellResult.issues.map(i => `${i.word} -> ${i.suggestions.join('/')}`));
+console.log('Corrected text:', spellResult.correctedText);
+
+console.log('Fix Broken Plurals:', fixBrokenPlurals('کتب و مدارس و مساجد'));
+
+// ═══════════════════════════════════════════════════════════════════════
+// 📅 تقویم جلالی (Jalali Calendar)
+// ═══════════════════════════════════════════════════════════════════════
+
+console.log('\n═══ تقویم جلالی ═══');
+
+const today = getJalaliDate();
+console.log('Official Today:', today.officialFormat);
+console.log('Standard Slash:', today.formattedPersianDigits);
+console.log('Is Leap Year:', today.isLeap);
+console.log('Format D MMMM YYYY:', formatJalaliDate(new Date(), 'D MMMM YYYY'));
+
+// ═══════════════════════════════════════════════════════════════════════
+// 📄 سندساز اداری (Document Builder)
+// ═══════════════════════════════════════════════════════════════════════
+
+console.log('\n═══ سندساز اداری ═══');
+
+const textDoc = generateDocument('leave_request', {
+  senderName: 'محمدحسین نادعلی',
+  body: 'درخواست استفاده از مرخصی استحقاقی به مدت دو روز کاری',
+}, { format: 'text' });
+console.log('Plain Text Document:\n', textDoc);
+
+// ═══════════════════════════════════════════════════════════════════════
+// 🤖 آداپتور هوش مصنوعی (LLM Hybrid Adapter)
+// ═══════════════════════════════════════════════════════════════════════
+
+console.log('\n═══ آداپتور هوش مصنوعی ═══');
+
+const llmInput = prepareTextForLLM('سلام، میخوام یه گزارش واسه ارتقا بنویسم براتون', {
+  targetTone: 'administrative',
+});
+console.log('Cleaned Text:', llmInput.cleanText);
+console.log('Prepared User Prompt:\n', llmInput.userPrompt);
+

@@ -323,3 +323,37 @@ export interface DocumentOptions {
   headerTitle?: string;
 }
 
+// ─── LLM Hybrid Adapter Types ────────────────────────────────────────
+
+/** لحن و سیاق هدف برای بازنویسی با مدل‌های زبانی */
+export type LLMTargetTone = 'administrative' | 'academic' | 'formal' | 'literary';
+
+/** بسته داده آماده برای ارسال به مدل‌های زبان بزرگ (LLMs) */
+export interface PreparedLLMInput {
+  /** متن پالایش‌شده و تمیز اولیه */
+  cleanText: string;
+  /** پرامپت سیستمی آماده برای مدل زبانی */
+  systemPrompt: string;
+  /** پرامپت کاربر آماده برای تزریق به مدل */
+  userPrompt: string;
+  /** تنظیمات و اطلاعات آماری متن */
+  metadata: {
+    originalWordCount: number;
+    detectedIssuesCount: number;
+    targetTone: LLMTargetTone;
+  };
+}
+
+/** تنظیمات پایپ‌لاین هیبریدی پردازش زبان طبیعی */
+export interface HybridPipelineOptions {
+  /** لحن هدف */
+  targetTone?: LLMTargetTone;
+  /** اصلاح غلط‌های املایی در فاز اول */
+  fixTypos?: boolean;
+  /** تبدیل ارقام به فارسی */
+  persianDigits?: boolean;
+  /** اضافه کردن دستورالعمل‌های فرهنگستان زبان و ادب فارسی */
+  enforceFarhangestanRules?: boolean;
+}
+
+
