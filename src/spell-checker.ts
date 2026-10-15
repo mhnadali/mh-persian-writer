@@ -1,6 +1,6 @@
 /**
- * ماژول غلط‌یاب و تصحیح املایی زبان فارسی
- * Persian Spell Checker and Auto-Correction Module
+ * ماژول غلط‌یاب و تصحیح املایی پیشرفته زبان فارسی
+ * Advanced Persian Spell Checker & Lexicon Engine
  *
  * @module spell-checker
  * @author M.H. Nadali
@@ -17,9 +17,35 @@ import {
 import { tokenizeWords } from './tokenizer';
 import { isVerb } from './stemmer';
 
-/** مجموعه کلمات پایه برای جستجوی O(1) */
+/** مجموعه کلمات پایه برای جستجوی فوق‌سریع O(1) */
 const baseDictionarySet = new Set<string>(BASE_PERSIAN_DICTIONARY);
 
+/** پسوندهای اشتقاقی و صرفی زبان فارسی */
+const VALID_SUFFIXES = [
+  'ها', 'های', 'هایی', 'هایمان', 'هایتان', 'هایشان', 'هایم', 'هایت', 'هایش',
+  'ان', 'گان', 'یان',
+  'تر', 'ترین', 'تری',
+  'ام', 'ات', 'اش', 'مان', 'تان', 'شان',
+  'ای', 'ایم', 'اید', 'اند',
+  'ی', 'یی', 'ین', 'ینه',
+  'چه', 'ک', 'کده', 'گاه', 'ستان', 'زار', 'بار', 'وار',
+  'مند', 'ناک', 'گار', 'گر', 'گری', 'بان', 'دان',
+  'یت', 'یات',
+  'سازی', 'ساز', 'سازان',
+  'سنجی', 'سنج',
+  'یابی', 'یاب',
+  'رسانی', 'رسان',
+  'شناسی', 'شناس', 'شناسان',
+  'پذیری', 'پذیر',
+  'کننده', 'کنندگان',
+  'افزار', 'افزارها',
+  'نامه', 'نامه‌ها',
+];
+
+/** پیشوندهای اشتقاقی و صرفی زبان فارسی */
+const VALID_PREFIXES = [
+  'می', 'نمی', 'بی', 'با', 'نا', 'هم', 'پیش', 'پس', 'باز', 'غیر', 'ضد', 'تک', 'چند', 'ابر', 'فوق'
+];
 
 /**
  * بررسی می‌کند که آیا دو حرف، هم‌آوا هستند یا خیر.
@@ -110,7 +136,57 @@ export function calculateSimilarity(s1: string, s2: string): number {
 }
 
 /**
- * بررسی صحت املایی یک کلمه در فرهنگ لغات پایه یا سفارشی
+ * بررسی ساختار مورفولوژیک و پسوندها و پیشوندهای کلمه
+ */
+function checkMorphology(word: string, dict: Set<string>): boolean {
+  // ۱. بررسی تفکیک پسوندها
+  for (const suffix of VALID_SUFFIXES) {
+    if (word.endsWith(ZWNJ + suffix) && word.length >= suffix.length + 2) {
+      const base = word.slice(0, -(suffix.length + 1));
+      if (dict.has(base) || isVerb(base) || checkMorphology(base, dict)) return true;
+    } else if (word.endsWith(suffix) && word.length >= suffix.length + 2) {
+      const base = word.slice(0, -suffix.length);
+      if (dict.has(base) || isVerb(base) || checkMorphology(base, dict)) return true;
+    }
+  }
+
+  // ۲. بررسی تفکیک پیشوندها
+  for (const prefix of VALID_PREFIXES) {
+    if (word.startsWith(prefix + ZWNJ) && word.length >= prefix.length + 2) {
+      const base = word.slice(prefix.length + 1);
+      if (dict.has(base) || isVerb(base) || checkMorphology(base, dict)) return true;
+    } else if (word.startsWith(prefix) && word.length >= prefix.length + 2) {
+      const base = word.slice(prefix.length);
+      if (dict.has(base) || isVerb(base) || checkMorphology(base, dict)) return true;
+    }
+  }
+
+  return false;
+}
+
+/**
+ * بررسی واژه‌های مرکب متصل (مانند وبسایت، همگامسازی، شخصیسازی، بدافزار)
+ */
+function checkCompoundWords(word: string, dict: Set<string>): boolean {
+  if (word.length < 5) return false;
+
+  for (let i = 2; i <= word.length - 2; i++) {
+    const part1 = word.slice(0, i);
+    const part2 = word.slice(i);
+
+    if (
+      (dict.has(part1) || checkMorphology(part1, dict)) &&
+      (dict.has(part2) || checkMorphology(part2, dict))
+    ) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+/**
+ * بررسی صحت املایی یک کلمه در فرهنگ لغات پایه، واژه‌های مرکب و صرف مورفولوژیک
  *
  * @param word واژه مورد بررسی
  * @param customDictionary واژه‌نامه سفارشی تکمیلی اختیاری
@@ -121,41 +197,40 @@ export function isWordCorrect(
   customDictionary?: string[]
 ): boolean {
   const cleaned = word.trim().replace(new RegExp(`^${ZWNJ}|${ZWNJ}$`, 'g'), '');
-  if (!cleaned) return true;
+  if (!cleaned || cleaned.length <= 1) return true;
 
-  // بررسی در واژه‌نامه سفارشی
+  // ۱. عبور کلمات لاتین و انگلیسی، اعداد و علائم خاص (Google, Chrome, Lens, PDF, Gemini)
+  if (/^[a-zA-Z0-9_\-\.]+$/.test(cleaned)) {
+    return true;
+  }
+
+  // ۲. بررسی در واژه‌نامه سفارشی
   if (customDictionary && customDictionary.includes(cleaned)) {
     return true;
   }
 
-  // بررسی در واژه‌نامه پایه
-  if (baseDictionarySet.has(cleaned)) {
-    return true;
-  }
-
-  // بررسی افعال معتبر
-  if (isVerb(cleaned)) {
-    return true;
-  }
-
-  // بررسی خطاهای رایج مشهور
+  // ۳. بررسی خطاهای املایی شناخته‌شده (Known Typos)
   if (COMMON_TYPOS[cleaned]) {
     return false;
   }
 
-  // بررسی واژگان متصل به پسوندها (مانند کتاب‌ها، خانه‌اش)
-  const suffixMatch = cleaned.match(
-    /^(.+?)(?:[\u200C]?)(ها|های|هایی|تر|ترین|ام|ات|اش|مان|تان|شان|ای|اید|اند)$/u
-  );
-  if (suffixMatch && baseDictionarySet.has(suffixMatch[1])) {
+  // ۴. بررسی مستقیم در واژه‌نامه پایه
+  if (baseDictionarySet.has(cleaned)) {
     return true;
   }
 
-  // بررسی واژگان متصل به پیشوندها (مانند بی‌کار، هم‌کلاس)
-  const prefixMatch = cleaned.match(
-    /^(بی|نا|هم|می|نمی)(?:[\u200C]?)(.+)$/u
-  );
-  if (prefixMatch && baseDictionarySet.has(prefixMatch[2])) {
+  // ۵. بررسی افعال معتبر
+  if (isVerb(cleaned)) {
+    return true;
+  }
+
+  // ۶. تحلیل ساختاری و صرف پسوندها و پیشوندها
+  if (checkMorphology(cleaned, baseDictionarySet)) {
+    return true;
+  }
+
+  // ۷. بررسی واژه‌های مرکب به‌هم‌پیوسته
+  if (checkCompoundWords(cleaned, baseDictionarySet)) {
     return true;
   }
 
@@ -163,7 +238,30 @@ export function isWordCorrect(
 }
 
 /**
- * ارائه پیشنهادات اصلاحی برای یک کلمه مشکوک یا نادرست
+ * تولید کاندیداهای تصحیح با تعویض حروف هم‌آوا (Homophone Permutations)
+ */
+function generateHomophoneCandidates(word: string, dict: Set<string>): string[] {
+  const results = new Set<string>();
+  const letters = word.split('');
+
+  for (let i = 0; i < letters.length; i++) {
+    const char = letters[i];
+    const homophones = HOMOPHONE_MAP[char];
+    if (homophones && homophones.length > 0) {
+      for (const h of homophones) {
+        const candidate = word.slice(0, i) + h + word.slice(i + 1);
+        if (dict.has(candidate)) {
+          results.add(candidate);
+        }
+      }
+    }
+  }
+
+  return Array.from(results);
+}
+
+/**
+ * ارائه پیشنهادات اصلاحی هوشمند برای یک کلمه مشکوک یا نادرست
  *
  * @param word واژه نادرست
  * @param options تنظیمات غلط‌یاب املایی
@@ -181,18 +279,25 @@ export function suggestCorrections(
   } = options;
 
   const target = word.trim();
-  if (!target) return [];
+  if (!target || target.length <= 1) return [];
 
-  // بررسی سریع در جدول خطاهای شناخته‌شده (Exact match for known typos)
+  // ۱. بررسی در جدول خطاهای شناخته‌شده (Exact match for known typos)
   if (COMMON_TYPOS[target]) {
     return [COMMON_TYPOS[target]];
   }
 
-  const combinedDict = [
+  const combinedDictSet = new Set<string>([
     ...BASE_PERSIAN_DICTIONARY,
     ...customDictionary,
-  ];
+  ]);
 
+  // ۲. تولید پیشنهادات فوق‌دقیق بر پایه حروف هم‌آوا (ص/س، ض/ز/ظ/ذ، ت/ط، ق/غ، ع/ء)
+  const homophoneCandidates = generateHomophoneCandidates(target, combinedDictSet);
+  if (homophoneCandidates.length > 0) {
+    return homophoneCandidates.slice(0, maxSuggestions);
+  }
+
+  // ۳. جستجوی فاصله ویرایشی کنترل‌شده (فقط با حداقل شباهت ۸۲٪ جهت جلوگیری از پیشنهادات نامربوط)
   interface Candidate {
     word: string;
     distance: number;
@@ -201,16 +306,20 @@ export function suggestCorrections(
 
   const candidates: Candidate[] = [];
 
-  for (const dictWord of combinedDict) {
-    // پیش‌فیلتر سریع بر اساس اختلاف طول برای افزایش چشمگیر سرعت
-    if (Math.abs(dictWord.length - target.length) > maxDistance) {
+  for (const dictWord of combinedDictSet) {
+    // تفاوت طول حداکثر ۱ کاراکتر
+    if (Math.abs(dictWord.length - target.length) > 1) {
       continue;
     }
 
+    const distLimit = Math.min(maxDistance, 1.5);
     const dist = damerauLevenshteinDistance(target, dictWord, useHomophones);
-    if (dist <= maxDistance) {
+    if (dist <= distLimit) {
       const sim = calculateSimilarity(target, dictWord);
-      candidates.push({ word: dictWord, distance: dist, similarity: sim });
+      // فیلتر سخت‌گیرانه برای عدم تولید هذیان و پیشنهادات تصادفی
+      if (sim >= 0.82) {
+        candidates.push({ word: dictWord, distance: dist, similarity: sim });
+      }
     }
   }
 
@@ -302,10 +411,10 @@ export function spellCheck(
   corrected = fixCommonTypos(corrected);
 
   for (const word of words) {
-    // از کلمات تک‌حرفی یا عددی صرف‌نظر می‌کنیم
-    if (word.length <= 1) continue;
+    // از کلمات تک‌حرفی، عددی یا لاتین صرف‌نظر می‌کنیم
+    if (word.length <= 1 || /^[a-zA-Z0-9_\-\.]+$/.test(word)) continue;
 
-    // اگر واژه صحیح است ادامه بده
+    // اگر واژه صحیح یا دارای صرف مجاز است ادامه بده
     if (isWordCorrect(word, customDictionary)) continue;
 
     const suggestions = suggestCorrections(word, {
@@ -315,13 +424,14 @@ export function spellCheck(
       useHomophones: options.useHomophones ?? true,
     });
 
+    // فقط در صورتی خطا تلقی می‌شود که پیشنهاد با اطمینان بالا وجود داشته باشد
     if (suggestions.length > 0) {
       const bestSuggestion = suggestions[0];
       const sim = calculateSimilarity(word, bestSuggestion);
 
       // تشخیص نوع خطا
       let errorType: SpellIssue['errorType'] = 'general';
-      if (COMMON_TYPOS[word]) {
+      if (COMMON_TYPOS[word] || generateHomophoneCandidates(word, baseDictionarySet).length > 0) {
         errorType = 'homophone';
       } else if (
         word.length === bestSuggestion.length &&
@@ -338,10 +448,12 @@ export function spellCheck(
         errorType,
       });
 
-      // جایگزینی کلمه نادرست با بهترین پیشنهاد در متن اصلاح‌شده
-      const escapedWord = word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-      const wordRegex = new RegExp(`(?<=^|[\\s،؛.!?؟()«»"'\\[\\]{}:–—-])${escapedWord}(?=[\\s،؛.!?؟()«»"'\\[\\]{}:–—-]|$)`, 'gu');
-      corrected = corrected.replace(wordRegex, bestSuggestion);
+      // جایگزینی کلمه در متن فقط در صورت اطمینان کافی
+      if (errorType === 'homophone' || COMMON_TYPOS[word] || sim >= 0.85) {
+        const escapedWord = word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const wordRegex = new RegExp(`(?<=^|[\\s،؛.!?؟()«»"'\\[\\]{}:–—-])${escapedWord}(?=[\\s،؛.!?؟()«»"'\\[\\]{}:–—-]|$)`, 'gu');
+        corrected = corrected.replace(wordRegex, bestSuggestion);
+      }
     }
   }
 

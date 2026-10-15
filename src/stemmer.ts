@@ -10,12 +10,12 @@ export function removeSuffix(word: string): { base: string; suffix: string } {
   const sortedSuffixes = [...PERSIAN_SUFFIXES].sort((a, b) => b.length - a.length);
 
   for (const suffix of sortedSuffixes) {
-    if (word.endsWith(ZWNJ + suffix) && word.length > suffix.length + 2) {
+    if (word.endsWith(ZWNJ + suffix) && word.length >= suffix.length + 2) {
       return {
         base: word.slice(0, -(suffix.length + 1)),
         suffix: suffix
       };
-    } else if (word.endsWith(suffix) && word.length > suffix.length + 2) {
+    } else if (word.endsWith(suffix) && word.length >= suffix.length + 2) {
       return {
         base: word.slice(0, -suffix.length),
         suffix: suffix
@@ -35,12 +35,12 @@ export function removePrefix(word: string): { base: string; prefix: string } {
   const sortedPrefixes = [...PERSIAN_PREFIXES].sort((a, b) => b.length - a.length);
 
   for (const prefix of sortedPrefixes) {
-    if (word.startsWith(prefix + ZWNJ) && word.length > prefix.length + 2) {
+    if (word.startsWith(prefix + ZWNJ) && word.length >= prefix.length + 2) {
       return {
         base: word.slice(prefix.length + 1),
         prefix: prefix
       };
-    } else if (word.startsWith(prefix) && word.length > prefix.length + 2 && (prefix === 'می' || prefix === 'نمی')) {
+    } else if (word.startsWith(prefix) && word.length >= prefix.length + 2 && (prefix === 'می' || prefix === 'نمی')) {
       return {
         base: word.slice(prefix.length),
         prefix: prefix
@@ -61,12 +61,18 @@ export function isVerb(word: string): boolean {
   if (word.startsWith('می' + ZWNJ) || word.startsWith('نمی' + ZWNJ)) {
     return true;
   }
+
+  const pastStems = Object.keys(VERB_STEMS);
+  const presentStems = Object.values(VERB_STEMS);
   
   // If starting with imperative prefix 'ب', verify that the remainder has a verb stem
   if (word.startsWith('ب') && word.length >= 3) {
     const withoutB = word.slice(1);
+    if (VERB_STEMS[withoutB] || presentStems.includes(withoutB)) {
+      return true;
+    }
     const { base: pureWithoutB } = removeSuffix(withoutB);
-    if (VERB_STEMS[pureWithoutB] || Object.values(VERB_STEMS).includes(pureWithoutB)) {
+    if (VERB_STEMS[pureWithoutB] || presentStems.includes(pureWithoutB)) {
       return true;
     }
   }
@@ -74,12 +80,23 @@ export function isVerb(word: string): boolean {
   const { base: noPrefixBase } = removePrefix(word);
   const { base: pureBase } = removeSuffix(noPrefixBase);
 
-  if (VERB_STEMS[pureBase] || Object.values(VERB_STEMS).includes(pureBase)) {
+  if (VERB_STEMS[pureBase] || presentStems.includes(pureBase)) {
     return true;
   }
   
-  if (VERB_STEMS[word] || Object.values(VERB_STEMS).includes(word)) {
+  if (VERB_STEMS[word] || presentStems.includes(word)) {
     return true;
+  }
+
+  // بررسی شناسه‌های فعلی شخصی: م، ی، د، یم، ید، ند
+  const personalEndings = ['ند', 'ید', 'یم', 'د', 'ی', 'م'];
+  for (const ending of personalEndings) {
+    if (noPrefixBase.endsWith(ending) && noPrefixBase.length >= ending.length + 2) {
+      const stemPart = noPrefixBase.slice(0, -ending.length);
+      if (pastStems.includes(stemPart) || presentStems.includes(stemPart)) {
+        return true;
+      }
+    }
   }
 
   return false;

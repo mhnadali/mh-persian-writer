@@ -98,4 +98,23 @@ describe('Phase 2: Persian Spell Checker & Lexicon Engine', () => {
       expect(fixed).toContain('بلیت');
     });
   });
+
+  describe('Zero False-Positive & Tech Term Hardening', () => {
+    it('does not produce false positives on technical and standard modern Persian text', () => {
+      const complexText = 'امکانات امنیتی مرورگر گوگل کروم، شامل شناسایی و هشدار درباره تهدیدهایی مانند فیشینگ، بدافزار و کلاهبرداری، مدیریت مجوزهای وبسایتها و بررسی وضعیت امنیتی است. کاربران میتوانند بوکمارکها، رمزهای عبور، تاریخچه و تنظیمات خود را از طریق حساب Google میان دستگاههای مختلف همگامسازی کنند.';
+      const result = spellCheck(complexText);
+      expect(result.issues).toEqual([]);
+      expect(result.isValid).toBe(true);
+    });
+
+    it('accurately identifies homophone errors without hallucinated replacements', () => {
+      const text = 'مسعول پروژه گذارش را به صورت حاظر تحویل داد.';
+      const result = spellCheck(text);
+      expect(result.issues.length).toBe(3);
+      expect(result.issues[0].suggestions).toContain('مسئول');
+      expect(result.issues[1].suggestions).toContain('گزارش');
+      expect(result.issues[2].suggestions).toContain('حاضر');
+    });
+  });
 });
+
