@@ -136,16 +136,12 @@ document.addEventListener('DOMContentLoaded', () => {
   // تلاش برای خواندن متن انتخاب‌شده در تب جاری هنگام باز شدن پاپ‌آپ
   chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
     if (tabs[0] && tabs[0].id) {
-      chrome.scripting.executeScript({
-        target: { tabId: tabs[0].id },
-        func: () => window.getSelection().toString()
-      }).then((results) => {
-        if (results && results[0] && results[0].result && results[0].result.trim()) {
-          inputEl.value = results[0].result.trim();
+      chrome.tabs.sendMessage(tabs[0].id, { type: 'AMACH_GET_SELECTION' }, (response) => {
+        if (chrome.runtime.lastError) return;
+        if (response && response.selection && response.selection.trim()) {
+          inputEl.value = response.selection.trim();
           updateStats();
         }
-      }).catch(() => {
-        // نادیده گرفتن محدودیت دسترسی در صفحات سیستمی کروم
       });
     }
   });

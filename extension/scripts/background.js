@@ -5,33 +5,35 @@
  * @author M.H. Nadali
  */
 
-// ایجاد آیتم‌های منوی راست‌کلیک (Context Menu)
+// ایجاد آیتم‌های منوی راست‌کلیک (Context Menu) به صورت امن
 chrome.runtime.onInstalled.addListener(() => {
-  chrome.contextMenus.create({
-    id: "amach_root",
-    title: "ویراستار فارسی امـاچ",
-    contexts: ["selection", "editable"]
-  });
+  chrome.contextMenus.removeAll(() => {
+    chrome.contextMenus.create({
+      id: "amach_root",
+      title: "ویراستار فارسی امـاچ",
+      contexts: ["selection", "editable"]
+    });
 
-  chrome.contextMenus.create({
-    id: "amach_normalize",
-    parentId: "amach_root",
-    title: "✨ نرمال‌سازی و تنظیم نیم‌فاصله",
-    contexts: ["selection", "editable"]
-  });
+    chrome.contextMenus.create({
+      id: "amach_normalize",
+      parentId: "amach_root",
+      title: "✨ نرمال‌سازی و تنظیم نیم‌فاصله",
+      contexts: ["selection", "editable"]
+    });
 
-  chrome.contextMenus.create({
-    id: "amach_formalize",
-    parentId: "amach_root",
-    title: "👔 تبدیل به متن رسمی و اداری",
-    contexts: ["selection", "editable"]
-  });
+    chrome.contextMenus.create({
+      id: "amach_formalize",
+      parentId: "amach_root",
+      title: "👔 تبدیل به متن رسمی و اداری",
+      contexts: ["selection", "editable"]
+    });
 
-  chrome.contextMenus.create({
-    id: "amach_spell",
-    parentId: "amach_root",
-    title: "🔍 بررسی و اصلاح غلط‌های املایی",
-    contexts: ["selection", "editable"]
+    chrome.contextMenus.create({
+      id: "amach_spell",
+      parentId: "amach_root",
+      title: "🔍 بررسی و اصلاح غلط‌های املایی",
+      contexts: ["selection", "editable"]
+    });
   });
 
   // تنظیمات پیش‌فرض افزونه

@@ -32,6 +32,13 @@
     }
   });
 
+  // به‌روزرسانی آنی تنظیمات بدون نیاز به رفرش تب‌ها
+  chrome.storage.onChanged.addListener((changes, namespace) => {
+    if (namespace === 'sync' && changes.amach_settings && changes.amach_settings.newValue) {
+      settings = Object.assign(settings, changes.amach_settings.newValue);
+    }
+  });
+
   // ساخت و مدیریت دکمه شناور تعاملی (Floating Action Button)
   function createFloatingButton() {
     if (floatingBtn) return floatingBtn;
@@ -177,11 +184,22 @@
     showToastNotification(`متن با موفقیت توسط امـاچ به‌روزرسانی شد ✨`);
   }
 
-  // جایگزینی متن در DOM (پشتیبانی از Input, Textarea, ContentEditable)
+  // جایگزینی متن در DOM با پشتیبانی کامل از ویرایشگرهای ریچ‌تکست (Gmail, Notion, Slack)
   function applyReplacement(newText) {
     const el = activeElement || document.activeElement;
 
-    // ۱. فیلدهای input و textarea استاندارد
+    // روش ۱: استفاده از execCommand برای یکپارچگی با فریم‌ورک‌های مدرن (React, Draft.js, ProseMirror) و قابلیت Undo/Redo
+    try {
+      const success = document.execCommand('insertText', false, newText);
+      if (success) {
+        if (el) el.dispatchEvent(new Event('input', { bubbles: true }));
+        return;
+      }
+    } catch (e) {
+      // در صورت محدود بودن execCommand به روش‌های جایگزین می‌رویم
+    }
+
+    // روش ۲: فیلدهای textarea و input استاندارد
     if (el && (el.tagName === 'TEXTAREA' || el.tagName === 'INPUT')) {
       const start = el.selectionStart;
       const end = el.selectionEnd;
@@ -195,7 +213,7 @@
       }
     }
 
-    // ۲. ویرایشگرهای ریچ‌تکست و contenteditable (مانند Gmail, Notion, ایتا، بله)
+    // روش ۳: ویرایشگرهای contenteditable بر پایه Range
     const selection = window.getSelection();
     if (selection && selection.rangeCount > 0) {
       const range = selection.getRangeAt(0);
@@ -209,7 +227,6 @@
       selection.removeAllRanges();
       selection.addRange(range);
 
-      // ارسال رویداد جهت سینک شدن با React/Vue/Draft.js
       if (el) {
         el.dispatchEvent(new Event('input', { bubbles: true }));
       }
@@ -234,14 +251,21 @@
     }, 2200);
   }
 
-  // گوش دادن به پیام‌های Background (منوی راست‌کلیک و کلیدهای میانبر)
+  // گوش دادن به پیام‌های Background و Popup
   chrome.runtime.onMessage.addListener((req, sender, sendResponse) => {
+    if (req.type === 'AMACH_GET_SELECTION') {
+      const sel = window.getSelection();
+      sendResponse({ selection: sel ? sel.toString() : '' });
+      return true;
+    }
+
     if (req.type === 'AMACH_CONTEXT_ACTION') {
       if (req.selectedText) {
         currentSelectionText = req.selectedText;
       }
       processSelectedText(req.action);
       sendResponse({ status: 'ok' });
+      return true;
     }
   });
 
