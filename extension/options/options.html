@@ -15,6 +15,7 @@
       --text-secondary: #94a3b8;
       --cyan-primary: #0ea5e9;
       --emerald-primary: #10b981;
+      --rose-primary: #f43f5e;
     }
 
     * {
@@ -102,11 +103,11 @@
 
     .desc {
       color: var(--text-secondary);
-      font-size: 12.5px;
-      margin-top: 2px;
+      font-size: 13px;
+      margin-top: 3px;
     }
 
-    /* بدنه تنظیمات */
+    /* کارت‌های اصلی تنظیمات */
     .settings-card {
       background: var(--bg-card);
       border: 1px solid var(--border-subtle);
@@ -117,23 +118,26 @@
       -webkit-backdrop-filter: blur(16px);
       display: flex;
       flex-direction: column;
+      gap: 10px;
     }
 
     .section-title {
-      font-size: 14px;
+      font-size: 15px;
       font-weight: 700;
       color: #38bdf8;
-      margin-bottom: 12px;
+      margin-bottom: 8px;
       display: flex;
       align-items: center;
-      gap: 6px;
+      gap: 8px;
+      border-bottom: 1px solid var(--border-subtle);
+      padding-bottom: 10px;
     }
 
     .setting-row {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 16px 0;
+      padding: 14px 0;
       border-bottom: 1px solid rgba(255, 255, 255, 0.06);
     }
 
@@ -142,12 +146,12 @@
     }
 
     .setting-info {
-      max-width: 80%;
+      max-width: 75%;
     }
 
     .setting-info b {
       display: block;
-      font-size: 14px;
+      font-size: 13.5px;
       color: #f8fafc;
       margin-bottom: 3px;
     }
@@ -155,6 +159,25 @@
     .setting-info span {
       font-size: 12px;
       color: var(--text-secondary);
+    }
+
+    /* سلکتور استایل‌دهی شده */
+    .tone-select {
+      background: #1e293b;
+      color: #f8fafc;
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      padding: 8px 12px;
+      border-radius: 9px;
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 600;
+      direction: rtl;
+      outline: none;
+      cursor: pointer;
+    }
+
+    .tone-select:focus {
+      border-color: var(--cyan-primary);
     }
 
     /* سوئیچ اختصاصی مدرن */
@@ -201,6 +224,90 @@
 
     input:checked + .slider:before {
       transform: translateX(21px);
+    }
+
+    /* بخش واژه‌نامه اختصاصی کاربر */
+    .dict-input-row {
+      display: flex;
+      gap: 10px;
+      margin-top: 6px;
+      margin-bottom: 12px;
+    }
+
+    .dict-input {
+      flex: 1;
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid var(--border-subtle);
+      border-radius: 9px;
+      color: #ffffff;
+      padding: 9px 14px;
+      font-family: inherit;
+      font-size: 13px;
+      outline: none;
+      direction: rtl;
+    }
+
+    .dict-input:focus {
+      border-color: var(--cyan-primary);
+    }
+
+    .btn-dict-add {
+      background: rgba(14, 165, 233, 0.2);
+      border: 1px solid rgba(56, 189, 248, 0.4);
+      color: #38bdf8;
+      border-radius: 9px;
+      padding: 9px 18px;
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .btn-dict-add:hover {
+      background: var(--cyan-primary);
+      color: #ffffff;
+    }
+
+    .dict-chips-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      max-height: 140px;
+      overflow-y: auto;
+      padding: 8px;
+      background: rgba(15, 23, 42, 0.4);
+      border-radius: 10px;
+      border: 1px dashed rgba(255, 255, 255, 0.08);
+    }
+
+    .dict-chip {
+      background: rgba(56, 189, 248, 0.12);
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      color: #f1f5f9;
+      font-size: 12px;
+      padding: 4px 10px;
+      border-radius: 20px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .dict-chip .chip-del {
+      cursor: pointer;
+      color: #94a3b8;
+      font-size: 12px;
+      transition: color 0.15s ease;
+    }
+
+    .dict-chip .chip-del:hover {
+      color: var(--rose-primary);
+    }
+
+    .dict-empty-note {
+      font-size: 12px;
+      color: var(--text-secondary);
+      padding: 6px 4px;
     }
 
     /* بخش آزمون زنده (Live Playground) */
@@ -321,7 +428,7 @@
             <h1>تنظیمات ویراستار فارسی ام‌اچ</h1>
             <span class="badge-mh">M.H. Nadali</span>
           </div>
-          <p class="desc">شخصی‌سازی موتور پردازش و ابزارک‌های تعاملی در سراسر وب</p>
+          <p class="desc">شخصی‌سازی موتور پردازش و ابزارک‌های تعاملی در سراسر وب (نسخه حرفه‌ای)</p>
         </div>
       </div>
     </header>
@@ -329,7 +436,18 @@
     <!-- تنظیمات رفتاری و نگارشی -->
     <main class="settings-card">
       <div class="section-title">
-        <span>⚙️</span> تنظیمات رفتاری و افزونه در صفحات وب
+        <span>⚙️</span> تنظیمات رفتاری و دستیار هوشمند در صفحات وب
+      </div>
+
+      <div class="setting-row">
+        <div class="setting-info">
+          <b>دستیار بلادرنگ کادرهای متنی (In-Page Real-time Assistant)</b>
+          <span>نمایش نشان سلامت متن و پیشنهادهای سریع در فیلدهای تایپ، اتوماسیون‌های اداری و پیام‌رسان‌ها</span>
+        </div>
+        <label class="switch">
+          <input type="checkbox" id="opt-realtime" checked>
+          <span class="slider"></span>
+        </label>
       </div>
 
       <div class="setting-row">
@@ -345,6 +463,19 @@
 
       <div class="setting-row">
         <div class="setting-info">
+          <b>لحن پیش‌فرض رسمیت و نگارش</b>
+          <span>تنظیم سطح ادب و سبک تبدیل جملات در ماژول رسمی‌سازی</span>
+        </div>
+        <select id="opt-tone" class="tone-select">
+          <option value="administrative">اداری و سازمانی (پیش‌فرض)</option>
+          <option value="academic">علمی و پژوهشی</option>
+          <option value="customer-support">پشتیبانی مشتریان و ارتباطات کاری</option>
+          <option value="colloquial-cleanup">پالایش عامیانه و روان‌سازی معیار</option>
+        </select>
+      </div>
+
+      <div class="setting-row">
+        <div class="setting-info">
           <b>تبدیل خودکار ارقام به فارسی</b>
           <span>تبدیل ارقام انگلیسی (1, 2, 3) و عربی (١, ٢, ٣) به اعداد شکیل فارسی (۱، ۲، ۳)</span>
         </div>
@@ -356,8 +487,8 @@
 
       <div class="setting-row">
         <div class="setting-info">
-          <b>غلط‌یاب هوشمند با حروف هم‌آوا</b>
-          <span>بررسی و کشف خطاهای کلمات مشابه آوایی (مانند ص/س، ض/ز/ظ/ذ، ت/ط، ه/ح)</span>
+          <b>غلط‌یاب هوشمند با حروف هم‌آوا و چیدمان کیبورد</b>
+          <span>بررسی هوشمند اشتباهات املایی بر پایه حروف هم‌آوا و کلیدهای مجاور کیبورد ایران (ISIRI 9147)</span>
         </div>
         <label class="switch">
           <input type="checkbox" id="opt-spell" checked>
@@ -385,13 +516,30 @@
       </div>
     </main>
 
+    <!-- بخش واژه‌نامه اختصاصی کاربر (User Custom Dictionary) -->
+    <section class="settings-card">
+      <div class="section-title">
+        <span>📚</span> واژه‌نامه اختصاصی من (Custom Dictionary)
+      </div>
+      <p style="font-size: 12.5px; color: var(--text-secondary); margin-bottom: 8px;">
+        کلمات، اسامی اشخاص، پروژه‌ها و اصطلاحات خاص کسب‌وکار خود را اضافه کنید تا در غلط‌یاب املایی مجاز شناخته شده و در تمام دستگاه‌هایتان همگام‌سازی شوند:
+      </p>
+      <div class="dict-input-row">
+        <input type="text" id="dict-word-input" class="dict-input" placeholder="واژه یا اصطلاح جدید (مثال: فراگستر، هم‌تیم)...">
+        <button type="button" id="btn-add-word" class="btn-dict-add">➕ افزودن</button>
+      </div>
+      <div class="dict-chips-container" id="dict-chips-container">
+        <span class="dict-empty-note">هنوز واژه‌ای به واژه‌نامه شخصی خود اضافه نکرده‌اید.</span>
+      </div>
+    </section>
+
     <!-- محیط آزمون زنده (Live Playground) -->
     <section class="playground-card">
       <div class="section-title">
         <span>🧪</span> آزمایش زنده تنظیمات (Playground)
       </div>
       <p class="desc">متن زیر را ویرایش کرده و برای سنجش عملکرد تنظیمات روی دکمه آزمون کلیک نمایید:</p>
-      <textarea id="test-input" class="playground-input">ميخوام برم به خانه ها با 10 نفر مسعول پروژه!</textarea>
+      <textarea id="test-input" class="playground-input">ميخوام نامه‌تون رو بفرستم به مسعول اداره و زنگ زدم که هماهنگ بشه!</textarea>
       <button type="button" id="btn-test" class="btn-test">⚡ بررسی و پردازش زنده</button>
       <div id="test-output" class="test-result-box">نتیجه ویرایش اینجا نمایش داده می‌شود...</div>
     </section>

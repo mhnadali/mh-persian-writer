@@ -1,6 +1,7 @@
 /**
- * ویراستار فارسی اماچ - کانتنت اسکریپت تعاملی
- * Amach Content Script - High Performance Persian In-page Assistant
+ * ویراستار فارسی ام‌اچ (M.H.) - کانتنت اسکریپت تعاملی و دستیار هوشمند درون‌صفحه
+ * M.H. Persian Writer - Real-time In-Page Field Assistant & Floating Menu
+ * Designed per UI/UX Designer Agent Standards
  *
  * @author M.H. Nadali
  */
@@ -9,37 +10,466 @@
   // دسترسی به موتور هسته mh-persian-writer از طریق باندل سراسری
   const Writer = window.MHPersianWriter;
   if (!Writer) {
-    console.warn('[Amach] MHPersianWriter core bundle not loaded.');
+    console.warn('[M.H. Writer] MHPersianWriter core bundle not loaded.');
     return;
   }
 
   let activeElement = null;
   let floatingBtn = null;
+  let fieldBadge = null;
+  let quickPopover = null;
   let currentSelectionText = '';
+  let debounceTimer = null;
+  let blurTimer = null;
 
-  // بارگذاری تنظیمات
+  let currentFieldIssues = [];
+  let currentFormalityTips = [];
+  let customDictionary = [];
+
+  // تنظیمات افزونه
   let settings = {
+    realtimeAssistant: true,
     autoHalfSpace: true,
     spellCheck: true,
     persianDigits: true,
     floatingButton: true,
-    formalityTone: 'administrative'
+    formalityTone: 'administrative',
   };
 
-  chrome.storage.sync.get(['amach_settings'], (res) => {
+  // بارگذاری تنظیمات و واژه‌نامه اختصاصی از حافظه محلی کروم
+  chrome.storage.sync.get(['amach_settings', 'amach_custom_dict'], (res) => {
     if (res.amach_settings) {
       settings = Object.assign(settings, res.amach_settings);
     }
-  });
-
-  // به‌روزرسانی آنی تنظیمات بدون نیاز به رفرش تب‌ها
-  chrome.storage.onChanged.addListener((changes, namespace) => {
-    if (namespace === 'sync' && changes.amach_settings && changes.amach_settings.newValue) {
-      settings = Object.assign(settings, changes.amach_settings.newValue);
+    if (Array.isArray(res.amach_custom_dict)) {
+      customDictionary = res.amach_custom_dict;
     }
   });
 
-  // ساخت و مدیریت دکمه شناور تعاملی (Floating Action Button)
+  // به‌روزرسانی آنی تنظیمات بدون نیاز به رفرش صفحه
+  chrome.storage.onChanged.addListener((changes, namespace) => {
+    if (namespace === 'sync') {
+      if (changes.amach_settings && changes.amach_settings.newValue) {
+        settings = Object.assign(settings, changes.amach_settings.newValue);
+        if (!settings.realtimeAssistant) {
+          hideFieldBadge();
+          hideQuickPopover();
+        }
+      }
+      if (changes.amach_custom_dict && Array.isArray(changes.amach_custom_dict.newValue)) {
+        customDictionary = changes.amach_custom_dict.newValue;
+        if (activeElement) checkActiveField(activeElement);
+      }
+    }
+  });
+
+  // ========================================================
+  // ۱. دستیار زنده فیلدهای متنی (Real-time In-Page Field Assistant)
+  // ========================================================
+
+  function createFieldBadge() {
+    if (fieldBadge) return fieldBadge;
+
+    const badge = document.createElement('div');
+    badge.id = 'amach-field-badge';
+    badge.setAttribute('dir', 'rtl');
+    badge.title = 'دستیار نگارش فارسی ام‌اچ (M.H.) - برای مشاهده جزئیات و اصلاح کلیک کنید';
+    badge.innerHTML = `
+      <span class="amach-badge-dot gray" id="amach-badge-dot"></span>
+      <span class="amach-badge-text" id="amach-badge-text">ام‌اچ</span>
+    `;
+
+    document.body.appendChild(badge);
+
+    badge.addEventListener('mousedown', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      toggleQuickPopover();
+    });
+
+    fieldBadge = badge;
+    return badge;
+  }
+
+  function positionFieldBadge(el) {
+    if (!el || !settings.realtimeAssistant) return;
+    const badge = createFieldBadge();
+    const rect = el.getBoundingClientRect();
+
+    // اگر المان نامرئی است یا ابعاد صفر دارد
+    if (rect.width === 0 || rect.height === 0 || rect.bottom < 0 || rect.top > window.innerHeight) {
+      badge.classList.remove('amach-badge-visible');
+      return;
+    }
+
+    // لنگراندازی گوشه چپ فیلد متنی (مناسب جهت RTL فارسی)
+    let left = rect.left + 8;
+    let top = rect.height >= 44 ? (rect.bottom - 28) : (rect.bottom + 4);
+
+    // مرزبندی با صفحه
+    left = Math.max(8, Math.min(window.innerWidth - 110, left));
+    top = Math.max(6, Math.min(window.innerHeight - 34, top));
+
+    badge.style.left = `${left}px`;
+    badge.style.top = `${top}px`;
+    badge.classList.add('amach-badge-visible');
+  }
+
+  function hideFieldBadge() {
+    if (fieldBadge) {
+      fieldBadge.classList.remove('amach-badge-visible');
+    }
+  }
+
+  function checkActiveField(el) {
+    if (!el || !settings.realtimeAssistant) return;
+    const text = getFieldText(el);
+
+    const badgeDot = document.getElementById('amach-badge-dot');
+    const badgeText = document.getElementById('amach-badge-text');
+    if (!badgeDot || !badgeText) return;
+
+    if (!text || text.trim().length < 2 || !Writer.isPersian(text)) {
+      badgeDot.className = 'amach-badge-dot gray';
+      badgeText.textContent = 'ام‌اچ';
+      currentFieldIssues = [];
+      currentFormalityTips = [];
+      if (quickPopover && quickPopover.classList.contains('amach-popover-visible')) {
+        renderPopoverContent();
+      }
+      return;
+    }
+
+    // تحلیل املایی با واژه‌نامه شخصی
+    let issues = [];
+    if (settings.spellCheck) {
+      const spellRes = Writer.spellCheck(text, { customDictionary });
+      issues = spellRes.issues || [];
+    }
+    currentFieldIssues = issues;
+
+    // تحلیل رسمی‌سازی بر اساس لحن منتخب
+    const formRes = Writer.checkFormality(text, { mode: settings.formalityTone });
+    currentFormalityTips = formRes.suggestions || [];
+
+    if (issues.length > 0) {
+      badgeDot.className = 'amach-badge-dot red';
+      badgeText.textContent = `${Writer.toPersianDigits(issues.length.toString())} خطا`;
+    } else if (currentFormalityTips.length > 0) {
+      badgeDot.className = 'amach-badge-dot yellow';
+      badgeText.textContent = `${Writer.toPersianDigits(currentFormalityTips.length.toString())} پیشنهاد`;
+    } else {
+      badgeDot.className = 'amach-badge-dot green';
+      badgeText.textContent = 'صحیح ✓';
+    }
+
+    if (quickPopover && quickPopover.classList.contains('amach-popover-visible')) {
+      renderPopoverContent();
+    }
+  }
+
+  // ========================================================
+  // ۲. پاپ‌اور سریع دستیار درون‌صفحه (Quick Popover)
+  // ========================================================
+
+  function createQuickPopover() {
+    if (quickPopover) return quickPopover;
+
+    const popover = document.createElement('div');
+    popover.id = 'amach-quick-popover';
+    popover.setAttribute('dir', 'rtl');
+    popover.innerHTML = `
+      <div class="amach-popover-header">
+        <div class="amach-popover-brand">
+          <span>🖊️</span>
+          <span>ویراستار ام‌اچ (M.H.)</span>
+        </div>
+        <button type="button" class="amach-popover-close" id="amach-popover-close-btn">&times;</button>
+      </div>
+      <div class="amach-popover-toolbar">
+        <button type="button" class="amach-popover-btn primary" id="amach-btn-norm-field" title="پاک‌سازی، اصلاح ارقام و نیم‌فاصله‌گذاری">
+          <span>✨</span>
+          <span>نیم‌فاصله</span>
+        </button>
+        <button type="button" class="amach-popover-btn" id="amach-btn-form-field" title="رسمی‌سازی هوشمند اداری">
+          <span>👔</span>
+          <span>رسمی‌سازی</span>
+        </button>
+        <button type="button" class="amach-popover-btn" id="amach-btn-fixall-field" title="اعمال خودکار تمام پیشنهادات املایی">
+          <span>⚡</span>
+          <span>اصلاح خطاها</span>
+        </button>
+      </div>
+      <div class="amach-popover-body" id="amach-popover-body"></div>
+    `;
+
+    document.body.appendChild(popover);
+
+    // بستن پاپ‌اور
+    popover.querySelector('#amach-popover-close-btn').addEventListener('click', (e) => {
+      e.stopPropagation();
+      hideQuickPopover();
+    });
+
+    // دکمه نرمال‌سازی کل فیلد
+    popover.querySelector('#amach-btn-norm-field').addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (!activeElement) return;
+      const original = getFieldText(activeElement);
+      const normalized = Writer.normalize(original, {
+        persianCharacters: true,
+        persianDigits: settings.persianDigits,
+        fixSpacing: true,
+        removeDiacritics: true,
+        fixPunctuation: true,
+      });
+      setFieldText(activeElement, normalized);
+      checkActiveField(activeElement);
+      showToastNotification('فیلد با موفقیت پاک‌سازی و نیم‌فاصله‌گذاری شد ✨');
+    });
+
+    // دکمه رسمی‌سازی کل فیلد
+    popover.querySelector('#amach-btn-form-field').addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (!activeElement) return;
+      const original = getFieldText(activeElement);
+      let formalized = Writer.toFormal(original, { mode: settings.formalityTone });
+      formalized = Writer.normalize(formalized, {
+        persianDigits: settings.persianDigits,
+        fixSpacing: true,
+      });
+      setFieldText(activeElement, formalized);
+      checkActiveField(activeElement);
+      showToastNotification('متن به نگارش رسمی و اداری تبدیل گردید 👔');
+    });
+
+    // دکمه اصلاح یکجای تمام غلط‌های املایی
+    popover.querySelector('#amach-btn-fixall-field').addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (!activeElement) return;
+      const original = getFieldText(activeElement);
+      const res = Writer.spellCheck(original, { customDictionary });
+      setFieldText(activeElement, res.correctedText);
+      checkActiveField(activeElement);
+      showToastNotification('تمام خطاهای املایی تصحیح شدند ✨');
+    });
+
+    quickPopover = popover;
+    return popover;
+  }
+
+  function toggleQuickPopover() {
+    const popover = createQuickPopover();
+    if (popover.classList.contains('amach-popover-visible')) {
+      hideQuickPopover();
+    } else {
+      showQuickPopover();
+    }
+  }
+
+  function showQuickPopover() {
+    if (!activeElement) return;
+    const popover = createQuickPopover();
+    const rect = activeElement.getBoundingClientRect();
+
+    let left = rect.left + 8;
+    let top = rect.bottom + 8;
+
+    if (top + 320 > window.innerHeight) {
+      top = Math.max(10, rect.top - 310);
+    }
+    left = Math.max(10, Math.min(window.innerWidth - 340, left));
+
+    popover.style.left = `${left}px`;
+    popover.style.top = `${top}px`;
+
+    renderPopoverContent();
+    popover.classList.add('amach-popover-visible');
+  }
+
+  function hideQuickPopover() {
+    if (quickPopover) {
+      quickPopover.classList.remove('amach-popover-visible');
+    }
+  }
+
+  function renderPopoverContent() {
+    const body = document.getElementById('amach-popover-body');
+    if (!body) return;
+
+    if (currentFieldIssues.length === 0 && currentFormalityTips.length === 0) {
+      body.innerHTML = `
+        <div class="amach-popover-empty">
+          <span style="font-size: 24px; display: block; margin-bottom: 6px;">🎉</span>
+          متن شما کاملاً صحیح، پاکیزه و استاندارد است.
+        </div>
+      `;
+      return;
+    }
+
+    let html = '';
+
+    // رندر خطاهای املایی
+    if (currentFieldIssues.length > 0) {
+      html += currentFieldIssues.map((issue) => `
+        <div class="amach-popover-card">
+          <div class="amach-popover-row">
+            <span class="amach-popover-wrong">«${issue.word}»</span>
+            <button type="button" class="amach-popover-dict-btn" data-word="${issue.word}" title="افزودن واژه به واژه‌نامه شخصی">
+              ➕ واژه‌نامه
+            </button>
+          </div>
+          <div class="amach-popover-chips">
+            ${issue.suggestions.map(sug => `
+              <button type="button" class="amach-popover-chip" data-word="${issue.word}" data-sug="${sug}" title="جایگزینی با «${sug}»">
+                ${sug}
+              </button>
+            `).join('')}
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // رندر نکات رسمی‌سازی
+    if (currentFormalityTips.length > 0) {
+      html += currentFormalityTips.map(tip => `
+        <div class="amach-popover-tip-card">
+          💡 ${tip}
+        </div>
+      `).join('');
+    }
+
+    body.innerHTML = html;
+
+    // اتصال رویداد کلیک روی چیپ‌های جایگزینی کلمه
+    body.querySelectorAll('.amach-popover-chip').forEach(chip => {
+      chip.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const word = chip.getAttribute('data-word');
+        const sug = chip.getAttribute('data-sug');
+        replaceWordInField(activeElement, word, sug);
+        checkActiveField(activeElement);
+      });
+    });
+
+    // اتصال رویداد کلیک روی دکمه واژه‌نامه
+    body.querySelectorAll('.amach-popover-dict-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const word = btn.getAttribute('data-word');
+        addWordToCustomDict(word);
+      });
+    });
+  }
+
+  function addWordToCustomDict(word) {
+    if (!word) return;
+    if (!customDictionary.includes(word)) {
+      customDictionary.push(word);
+      chrome.storage.sync.set({ amach_custom_dict: customDictionary });
+    }
+    currentFieldIssues = currentFieldIssues.filter(i => i.word !== word);
+    if (activeElement) checkActiveField(activeElement);
+    showToastNotification(`واژه «${word}» به واژه‌نامه شخصی اضافه شد 📚`);
+  }
+
+  // جایگزینی کلمه واحد در متن فیلد
+  function replaceWordInField(el, oldWord, newWord) {
+    if (!el) return;
+    const current = getFieldText(el);
+    const regex = new RegExp(`\\b${oldWord}\\b`, 'g');
+    const updated = current.replace(regex, newWord);
+    setFieldText(el, updated);
+  }
+
+  function getFieldText(el) {
+    if (!el) return '';
+    if (el.tagName === 'TEXTAREA' || el.tagName === 'INPUT') {
+      return el.value || '';
+    }
+    return el.innerText || el.textContent || '';
+  }
+
+  function setFieldText(el, newText) {
+    if (!el) return;
+    if (el.tagName === 'TEXTAREA' || el.tagName === 'INPUT') {
+      el.value = newText;
+      el.dispatchEvent(new Event('input', { bubbles: true }));
+      el.dispatchEvent(new Event('change', { bubbles: true }));
+      return;
+    }
+    // Contenteditable
+    el.innerText = newText;
+    el.dispatchEvent(new Event('input', { bubbles: true }));
+  }
+
+  // ========================================================
+  // ۳. مدیریت رویدادهای فوکوس و تایپ در صفحه
+  // ========================================================
+
+  document.addEventListener('focusin', (e) => {
+    if (isEditable(e.target)) {
+      activeElement = e.target;
+      clearTimeout(blurTimer);
+      positionFieldBadge(activeElement);
+      checkActiveField(activeElement);
+    }
+  }, true);
+
+  document.addEventListener('input', (e) => {
+    if (isEditable(e.target)) {
+      activeElement = e.target;
+      positionFieldBadge(activeElement);
+
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(() => {
+        checkActiveField(activeElement);
+      }, 300);
+    }
+  }, true);
+
+  // خروج فوکوس
+  document.addEventListener('focusout', (e) => {
+    blurTimer = setTimeout(() => {
+      const active = document.activeElement;
+      if (
+        (fieldBadge && fieldBadge.contains(active)) ||
+        (quickPopover && quickPopover.contains(active))
+      ) {
+        return;
+      }
+      hideFieldBadge();
+      hideQuickPopover();
+    }, 250);
+  }, true);
+
+  // تغییر سایز یا اسکرول صفحه: به‌روزرسانی موقعیت لنگر نشانگر
+  window.addEventListener('scroll', () => {
+    if (activeElement && fieldBadge && fieldBadge.classList.contains('amach-badge-visible')) {
+      positionFieldBadge(activeElement);
+    }
+  }, { passive: true });
+
+  window.addEventListener('resize', () => {
+    if (activeElement && fieldBadge && fieldBadge.classList.contains('amach-badge-visible')) {
+      positionFieldBadge(activeElement);
+    }
+  });
+
+  function isEditable(el) {
+    if (!el) return false;
+    return (
+      el.tagName === 'TEXTAREA' ||
+      (el.tagName === 'INPUT' && ['text', 'search', 'email', 'url'].includes(el.type)) ||
+      el.isContentEditable ||
+      el.getAttribute('contenteditable') === 'true'
+    );
+  }
+
+  // ========================================================
+  // ۴. دکمه شناور انتخاب متن (Floating Action Bubble)
+  // ========================================================
+
   function createFloatingButton() {
     if (floatingBtn) return floatingBtn;
 
@@ -102,27 +532,16 @@
     }
   }
 
-  // ثبت آخرین عنصر فوکوس‌شده
-  document.addEventListener('focusin', (e) => {
-    if (isEditable(e.target)) {
-      activeElement = e.target;
-    }
-  }, true);
-
-  function isEditable(el) {
-    if (!el) return false;
-    return (
-      el.tagName === 'TEXTAREA' ||
-      (el.tagName === 'INPUT' && ['text', 'search', 'email', 'url'].includes(el.type)) ||
-      el.isContentEditable ||
-      el.getAttribute('contenteditable') === 'true'
-    );
-  }
-
   // رویداد انتخاب متن توسط کاربر
   document.addEventListener('mouseup', (e) => {
-    // اگر کلیک روی خود دکمه شناور است، نادیده بگیر
-    if (floatingBtn && floatingBtn.contains(e.target)) return;
+    // اگر کلیک روی خود دکمه شناور، نشانگر فیلد یا پاپ‌اور است، نادیده بگیر
+    if (
+      (floatingBtn && floatingBtn.contains(e.target)) ||
+      (fieldBadge && fieldBadge.contains(e.target)) ||
+      (quickPopover && quickPopover.contains(e.target))
+    ) {
+      return;
+    }
 
     setTimeout(() => {
       const selection = window.getSelection();
@@ -143,6 +562,14 @@
   document.addEventListener('mousedown', (e) => {
     if (floatingBtn && !floatingBtn.contains(e.target)) {
       hideFloatingButton();
+    }
+    if (
+      quickPopover &&
+      !quickPopover.contains(e.target) &&
+      fieldBadge &&
+      !fieldBadge.contains(e.target)
+    ) {
+      hideQuickPopover();
     }
   });
 
@@ -168,7 +595,7 @@
         break;
 
       case 'formalize':
-        replacement = Writer.toFormal(currentSelectionText);
+        replacement = Writer.toFormal(currentSelectionText, { mode: settings.formalityTone });
         replacement = Writer.normalize(replacement, {
           persianDigits: settings.persianDigits,
           fixSpacing: true,
@@ -176,7 +603,7 @@
         break;
 
       case 'spell':
-        const spellResult = Writer.spellCheck(currentSelectionText);
+        const spellResult = Writer.spellCheck(currentSelectionText, { customDictionary });
         replacement = spellResult.correctedText;
         break;
 
@@ -237,7 +664,10 @@
     }
   }
 
-  // نمایش پیام زیبا (Toast)
+  // ========================================================
+  // ۵. پیام توست زیبا (Toast Notification)
+  // ========================================================
+
   function showToastNotification(msg) {
     const toast = document.createElement('div');
     toast.className = 'amach-toast-pill';

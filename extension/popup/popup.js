@@ -21,6 +21,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const statTime = document.getElementById('stat-time');
   const formalityIndicator = document.getElementById('formality-indicator');
   const formalityText = document.getElementById('formality-text');
+  const selectPopupTone = document.getElementById('select-popup-tone');
 
   const btnPaste = document.getElementById('btn-paste');
   const btnClear = document.getElementById('btn-clear');
@@ -37,6 +38,33 @@ document.addEventListener('DOMContentLoaded', () => {
   const btnClosePanel = document.getElementById('btn-close-panel');
 
   let currentSpellIssues = [];
+  let customDictionary = [];
+  let currentTone = 'administrative';
+
+  // ۱. بارگذاری تنظیمات لحن و واژه‌نامه اختصاصی از حافظه همگام‌ساز کروم
+  chrome.storage.sync.get(['amach_settings', 'amach_custom_dict'], (res) => {
+    if (res.amach_settings && res.amach_settings.formalityTone) {
+      currentTone = res.amach_settings.formalityTone;
+      if (selectPopupTone) selectPopupTone.value = currentTone;
+    }
+    if (Array.isArray(res.amach_custom_dict)) {
+      customDictionary = res.amach_custom_dict;
+    }
+    updateStats();
+  });
+
+  // تغییر لحن نگارش توسط کاربر در پاپ‌آپ
+  if (selectPopupTone) {
+    selectPopupTone.addEventListener('change', () => {
+      currentTone = selectPopupTone.value;
+      chrome.storage.sync.get(['amach_settings'], (res) => {
+        const s = res.amach_settings || {};
+        s.formalityTone = currentTone;
+        chrome.storage.sync.set({ amach_settings: s });
+      });
+      updateStats();
+    });
+  }
 
   // به‌روزرسانی آنی آمار و شاخص‌های کیفی متن
   function updateStats() {
@@ -49,7 +77,7 @@ document.addEventListener('DOMContentLoaded', () => {
       statWords.textContent = '۰';
       statScore.textContent = '۱۰۰٪';
       statTime.textContent = '۰ ثانیه';
-      formalityText.textContent = 'رسمی و اداری';
+      formalityText.textContent = getToneLabel(currentTone);
       formalityIndicator.className = 'formality-badge';
       return;
     }
@@ -66,20 +94,30 @@ document.addEventListener('DOMContentLoaded', () => {
       statTime.textContent = `~${Writer.toPersianDigits(minutes.toString())} دقیقه`;
     }
 
-    // تحلیل رسمیت متن
-    const formality = Writer.checkFormality(text);
+    // تحلیل رسمیت متن بر اساس لحن انتخابی
+    const formality = Writer.checkFormality(text, { mode: currentTone });
     const score = formality.score;
     statScore.textContent = `${Writer.toPersianDigits(score.toString())}٪`;
 
     formalityIndicator.className = 'formality-badge';
     if (score >= 80) {
-      formalityText.textContent = 'رسمی و اداری';
+      formalityText.textContent = `${getToneLabel(currentTone)} (رسمی)`;
     } else if (score >= 50) {
       formalityIndicator.classList.add('warning');
       formalityText.textContent = 'نیمه‌رسمی';
     } else {
       formalityIndicator.classList.add('danger');
       formalityText.textContent = 'غیررسمی / محاوره';
+    }
+  }
+
+  function getToneLabel(tone) {
+    switch (tone) {
+      case 'academic': return 'نگارش علمی';
+      case 'customer-support': return 'پشتیبانی مشتریان';
+      case 'colloquial-cleanup': return 'روان‌سازی عمومی';
+      case 'administrative':
+      default: return 'رسمی و اداری';
     }
   }
 
@@ -127,7 +165,7 @@ document.addEventListener('DOMContentLoaded', () => {
     showNotification('متن با موفقیت پاک‌سازی، یکدست و نیم‌فاصله‌گذاری شد ✨');
   });
 
-  // ۲. تبدیل به نگارش رسمی و اداری (Formalize)
+  // ۲. تبدیل به نگارش رسمی و اداری (Formalize) بر اساس لحن انتخابی
   btnFormalize.addEventListener('click', () => {
     const text = inputEl.value;
     if (!text.trim()) {
@@ -135,13 +173,13 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
-    const check = Writer.checkFormality(text);
-    inputEl.value = Writer.toFormal(text);
+    const check = Writer.checkFormality(text, { mode: currentTone });
+    inputEl.value = Writer.toFormal(text, { mode: currentTone });
     updateStats();
 
     if (check.suggestions && check.suggestions.length > 0) {
       btnApplyAll.classList.add('hidden');
-      panelTitle.textContent = `پیشنهادات بهبود لحن اداری (${Writer.toPersianDigits(check.suggestions.length.toString())} مورد)`;
+      panelTitle.textContent = `پیشنهادات بهبود لحن (${Writer.toPersianDigits(check.suggestions.length.toString())} مورد)`;
       panelBody.innerHTML = `
         <div style="display: flex; flex-direction: column; gap: 6px;">
           ${check.suggestions.map(s => `
@@ -153,11 +191,11 @@ document.addEventListener('DOMContentLoaded', () => {
       `;
       resultsPanel.classList.remove('hidden');
     } else {
-      showNotification('متن با موفقیت به نگارش رسمی و اداری تبدیل شد 👔');
+      showNotification(`متن با موفقیت به ${getToneLabel(currentTone)} تبدیل شد 👔`);
     }
   });
 
-  // ۳. غلط‌یاب هوشمند املایی (Spell Check)
+  // ۳. غلط‌یاب هوشمند املایی (Spell Check) با واژه‌نامه اختصاصی کاربر
   btnSpell.addEventListener('click', () => {
     const text = inputEl.value;
     if (!text.trim()) {
@@ -165,7 +203,7 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
-    const result = Writer.spellCheck(text);
+    const result = Writer.spellCheck(text, { customDictionary });
     currentSpellIssues = result.issues || [];
 
     if (currentSpellIssues.length === 0) {
@@ -198,11 +236,14 @@ document.addEventListener('DOMContentLoaded', () => {
               ${sug}
             </button>
           `).join('')}
+          <button type="button" class="add-to-dict-chip" data-word="${issue.word}" title="افزودن واژه «${issue.word}» به واژه‌نامه شخصی">
+            ➕ واژه‌نامه
+          </button>
         </div>
       </div>
     `).join('');
 
-    // اتصال رویداد کلیک روی چیپ‌های پیشنهاد
+    // اتصال رویداد کلیک روی چیپ‌های پیشنهاد اصلاح
     panelBody.querySelectorAll('.suggestion-chip').forEach(chip => {
       chip.addEventListener('click', () => {
         const word = chip.getAttribute('data-word');
@@ -210,6 +251,26 @@ document.addEventListener('DOMContentLoaded', () => {
         applySingleCorrection(word, sug);
       });
     });
+
+    // اتصال رویداد کلیک روی دکمه «افزودن به واژه‌نامه شخصی»
+    panelBody.querySelectorAll('.add-to-dict-chip').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const word = btn.getAttribute('data-word');
+        addWordToCustomDict(word);
+      });
+    });
+  }
+
+  function addWordToCustomDict(word) {
+    if (!word) return;
+    if (!customDictionary.includes(word)) {
+      customDictionary.push(word);
+      chrome.storage.sync.set({ amach_custom_dict: customDictionary });
+    }
+    // حذف فوری واژه از لیست خطاهای جاری
+    currentSpellIssues = currentSpellIssues.filter(i => i.word !== word);
+    renderSpellIssues();
+    showNotification(`واژه «${word}» با موفقیت به واژه‌نامه شخصی اضافه شد 📚`);
   }
 
   function applySingleCorrection(wrongWord, correctWord) {
@@ -224,7 +285,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // اعمال خودکار همه پیشنهادات املایی
   btnApplyAll.addEventListener('click', () => {
-    const result = Writer.spellCheck(inputEl.value);
+    const result = Writer.spellCheck(inputEl.value, { customDictionary });
     inputEl.value = result.correctedText;
     updateStats();
     currentSpellIssues = [];

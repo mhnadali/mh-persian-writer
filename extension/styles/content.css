@@ -140,3 +140,284 @@
   opacity: 1;
   transform: translateY(0) scale(1);
 }
+
+/* ========================================================
+   نشانگر زنده دستیار نگارش گوشه فیلدهای متنی (Field Assistant Badge)
+   ======================================================== */
+#amach-field-badge {
+  position: fixed;
+  z-index: 2147483645;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(15, 23, 42, 0.9);
+  color: #f8fafc;
+  padding: 3px 9px 3px 8px;
+  border-radius: 9999px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  font-family: 'Vazirmatn', 'Shabnam', system-ui, -apple-system, sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  direction: rtl;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  user-select: none;
+  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(4px) scale(0.92);
+}
+
+#amach-field-badge.amach-badge-visible {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0) scale(1);
+}
+
+#amach-field-badge:hover {
+  transform: translateY(-1px) scale(1.04);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
+  border-color: rgba(56, 189, 248, 0.4);
+}
+
+.amach-badge-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.amach-badge-dot.gray {
+  background: #94a3b8;
+}
+
+.amach-badge-dot.green {
+  background: #10b981;
+  box-shadow: 0 0 8px rgba(16, 185, 129, 0.6);
+}
+
+.amach-badge-dot.yellow {
+  background: #f59e0b;
+  box-shadow: 0 0 8px rgba(245, 158, 11, 0.6);
+}
+
+.amach-badge-dot.red {
+  background: #f43f5e;
+  box-shadow: 0 0 8px rgba(244, 63, 94, 0.6);
+  animation: amach-pulse-red 1.6s infinite;
+}
+
+@keyframes amach-pulse-red {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.25); opacity: 0.8; }
+}
+
+.amach-badge-text {
+  letter-spacing: -0.2px;
+}
+
+/* ========================================================
+   پاپ‌اور سریع دستیار درون صفحه (Quick Popover)
+   ======================================================== */
+#amach-quick-popover {
+  position: fixed;
+  z-index: 2147483646;
+  width: 330px;
+  max-width: calc(100vw - 32px);
+  max-height: 400px;
+  background: rgba(15, 23, 42, 0.94);
+  color: #f8fafc;
+  border-radius: 14px;
+  box-shadow: 0 16px 40px -4px rgba(0, 0, 0, 0.5), 0 4px 12px -2px rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(56, 189, 248, 0.25);
+  font-family: 'Vazirmatn', 'Shabnam', system-ui, -apple-system, sans-serif;
+  direction: rtl;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(8px) scale(0.96);
+}
+
+#amach-quick-popover.amach-popover-visible {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0) scale(1);
+}
+
+.amach-popover-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(30, 41, 59, 0.4);
+}
+
+.amach-popover-brand {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #38bdf8;
+}
+
+.amach-popover-close {
+  background: none;
+  border: none;
+  color: #94a3b8;
+  font-size: 16px;
+  cursor: pointer;
+  padding: 2px 5px;
+  border-radius: 4px;
+  line-height: 1;
+  transition: all 0.15s ease;
+}
+
+.amach-popover-close:hover {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.amach-popover-toolbar {
+  display: flex;
+  gap: 6px;
+  padding: 8px 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(15, 23, 42, 0.6);
+  flex-wrap: wrap;
+}
+
+.amach-popover-btn {
+  background: rgba(30, 41, 59, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #e2e8f0;
+  border-radius: 6px;
+  padding: 3px 8px;
+  font-size: 11px;
+  font-family: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.15s ease;
+}
+
+.amach-popover-btn:hover {
+  background: rgba(56, 189, 248, 0.2);
+  color: #38bdf8;
+  border-color: rgba(56, 189, 248, 0.4);
+}
+
+.amach-popover-btn.primary {
+  background: rgba(14, 165, 233, 0.2);
+  border-color: rgba(14, 165, 233, 0.4);
+  color: #38bdf8;
+}
+
+.amach-popover-btn.primary:hover {
+  background: #0ea5e9;
+  color: #ffffff;
+}
+
+.amach-popover-body {
+  padding: 10px 12px;
+  overflow-y: auto;
+  max-height: 280px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.amach-popover-card {
+  background: rgba(30, 41, 59, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  padding: 7px 10px;
+  border-radius: 8px;
+  font-size: 11.5px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.amach-popover-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.amach-popover-wrong {
+  color: #fb7185;
+  text-decoration: line-through;
+  font-weight: 600;
+}
+
+.amach-popover-chips {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.amach-popover-chip {
+  background: rgba(16, 185, 129, 0.18);
+  border: 1px solid rgba(16, 185, 129, 0.35);
+  color: #34d399;
+  padding: 2px 7px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 11px;
+  font-family: inherit;
+  font-weight: 600;
+  transition: all 0.15s ease;
+}
+
+.amach-popover-chip:hover {
+  background: #10b981;
+  color: #ffffff;
+  transform: scale(1.05);
+}
+
+.amach-popover-dict-btn {
+  background: rgba(56, 189, 248, 0.12);
+  border: 1px dashed rgba(56, 189, 248, 0.35);
+  color: #38bdf8;
+  padding: 2px 6px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 10px;
+  font-family: inherit;
+  font-weight: 500;
+  transition: all 0.15s ease;
+}
+
+.amach-popover-dict-btn:hover {
+  background: rgba(56, 189, 248, 0.25);
+  color: #ffffff;
+  border-color: #38bdf8;
+}
+
+.amach-popover-empty {
+  text-align: center;
+  padding: 14px 10px;
+  color: #94a3b8;
+  font-size: 12px;
+}
+
+.amach-popover-tip-card {
+  background: rgba(245, 158, 11, 0.1);
+  border: 1px solid rgba(245, 158, 11, 0.25);
+  color: #fde68a;
+  padding: 6px 10px;
+  border-radius: 7px;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
