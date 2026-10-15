@@ -1,0 +1,108 @@
+/* استایل‌های شیک و ایزوله دکمه شناور اماچ */
+#amach-floating-action-bubble {
+  position: absolute;
+  z-index: 2147483647;
+  display: flex;
+  align-items: center;
+  background: #0f172a;
+  color: #f8fafc;
+  padding: 4px 8px;
+  border-radius: 30px;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  font-family: 'Vazirmatn', -apple-system, BlinkMacSystemFont, 'Segoe UI', Tahoma, sans-serif;
+  font-size: 13px;
+  transition: opacity 0.2s ease, transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  user-select: none;
+  backdrop-filter: blur(8px);
+}
+
+.amach-bubble-hidden {
+  opacity: 0;
+  pointer-events: none;
+  transform: scale(0.85) translateY(6px);
+}
+
+.amach-bubble-visible {
+  opacity: 1;
+  pointer-events: auto;
+  transform: scale(1) translateY(0);
+}
+
+.amach-bubble-main {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 6px;
+  border-left: 1px solid rgba(255, 255, 255, 0.2);
+  margin-left: 4px;
+}
+
+.amach-logo-icon {
+  font-size: 14px;
+}
+
+.amach-bubble-title {
+  font-weight: 700;
+  color: #38bdf8;
+  letter-spacing: -0.3px;
+}
+
+.amach-bubble-menu {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.amach-action-btn {
+  background: transparent;
+  border: none;
+  color: #e2e8f0;
+  padding: 4px 10px;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  transition: background-color 0.15s ease, color 0.15s ease, transform 0.1s ease;
+  font-family: inherit;
+  outline: none;
+}
+
+.amach-action-btn:hover {
+  background: #2563eb;
+  color: #ffffff;
+  transform: translateY(-1px);
+}
+
+.amach-action-btn:active {
+  transform: scale(0.96);
+}
+
+/* اعلان حبابی (Toast) */
+.amach-toast-pill {
+  position: fixed;
+  bottom: 30px;
+  right: 30px;
+  z-index: 2147483647;
+  background: #1e293b;
+  color: #ffffff;
+  padding: 12px 20px;
+  border-radius: 12px;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2);
+  border-right: 4px solid #38bdf8;
+  font-family: 'Vazirmatn', -apple-system, BlinkMacSystemFont, 'Segoe UI', Tahoma, sans-serif;
+  font-size: 13px;
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.25s ease, transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  pointer-events: none;
+  direction: rtl;
+}
+
+.amach-toast-show {
+  opacity: 1;
+  transform: translateY(0);
+}

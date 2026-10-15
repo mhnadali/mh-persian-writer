@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <title>ویراستار فارسی امـاچ</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="amach-popup-container">
+    <header class="popup-header">
+      <div class="brand">
+        <span class="logo-emoji">🖊️</span>
+        <div>
+          <h1>امـاچ</h1>
+          <p class="subtitle">دستیار هوشمند نوشتار فارسی</p>
+        </div>
+      </div>
+      <a href="../options/options.html" target="_blank" class="settings-link" title="تنظیمات">⚙️</a>
+    </header>
+
+    <div class="editor-area">
+      <textarea id="popup-input" placeholder="متن فارسی خود را اینجا تایپ یا الصاق (Paste) نمایید..."></textarea>
+      <div class="stats-bar" id="stats-bar">
+        <span>تعداد واژگان: <b id="stat-words">۰</b></span>
+        <span>امتیاز رسمیت: <b id="stat-score">۱۰۰</b></span>
+      </div>
+    </div>
+
+    <div class="actions-grid">
+      <button id="btn-normalize" class="btn-action primary" title="اصلاح نیم‌فاصله‌ها و کاراکترها">
+        <span class="icon">✨</span>
+        <span>پاک‌سازی و نیم‌فاصله</span>
+      </button>
+
+      <button id="btn-formalize" class="btn-action secondary" title="تبدیل محاوره به اداری">
+        <span class="icon">👔</span>
+        <span>تبدیل به رسمی</span>
+      </button>
+
+      <button id="btn-spell" class="btn-action warning" title="غلط‌یابی املایی">
+        <span class="icon">🔍</span>
+        <span>غلط‌یاب املایی</span>
+      </button>
+
+      <button id="btn-copy" class="btn-action success" title="کپی متن نهایی">
+        <span class="icon">📋</span>
+        <span>کپی در کلیپ‌بورد</span>
+      </button>
+    </div>
+
+    <div id="results-panel" class="results-panel hidden">
+      <div class="panel-header">
+        <span id="panel-title">پیشنهادات و خطاهای املایی</span>
+        <button id="btn-close-panel" class="btn-close">&times;</button>
+      </div>
+      <div id="panel-body" class="panel-body"></div>
+    </div>
+
+    <footer class="popup-footer">
+      <span>توسعه‌یافته توسط <a href="https://github.com/mhnadali/mh-persian-writer" target="_blank">M.H. Nadali</a></span>
+      <span class="version-tag">v1.0.0</span>
+    </footer>
+  </div>
+
+  <script src="../scripts/core-bundle.global.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>

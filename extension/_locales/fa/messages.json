@@ -1,0 +1,14 @@
+{
+  "appName": {
+    "message": "ویراستار فارسی اماچ | mh-persian-writer",
+    "description": "The name of the extension"
+  },
+  "appShortName": {
+    "message": "امـاچ",
+    "description": "Short name"
+  },
+  "appDesc": {
+    "message": "دستیار هوشمند و حرفه‌ای ویراستاری، غلط‌یابی املایی، تنظیم نیم‌فاصله و نگارش نامه‌های رسمی اداری در محیط وب.",
+    "description": "The description of the extension"
+  }
+}

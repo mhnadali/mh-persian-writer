@@ -1,0 +1,14 @@
+{
+  "appName": {
+    "message": "Amach Persian Writer | mh-persian-writer",
+    "description": "The name of the extension"
+  },
+  "appShortName": {
+    "message": "Amach",
+    "description": "Short name"
+  },
+  "appDesc": {
+    "message": "Professional Persian Grammar, Spell Checker, Half-Space (ZWNJ) and Administrative Letter Assistant.",
+    "description": "The description of the extension"
+  }
+}

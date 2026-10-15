@@ -1,0 +1,61 @@
+{
+  "manifest_version": 3,
+  "name": "ویراستار فارسی اماچ | mh-persian-writer",
+  "short_name": "امـاچ",
+  "version": "1.0.0",
+  "description": "دستیار هوشمند و حرفه‌ای ویراستاری، غلط‌یابی املایی، تنظیم نیم‌فاصله و نگارش نامه‌های رسمی اداری در محیط وب (جیمیل، پیام‌رسان‌ها، فرم‌ها و اتوماسیون‌های سازمانی).",
+  "default_locale": "fa",
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "action": {
+    "default_popup": "popup/popup.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "32": "icons/icon32.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    },
+    "default_title": "ویراستار فارسی اماچ"
+  },
+  "background": {
+    "service_worker": "scripts/background.js",
+    "type": "module"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["scripts/core-bundle.global.js", "scripts/content.js"],
+      "css": ["styles/content.css"],
+      "run_at": "document_idle"
+    }
+  ],
+  "permissions": [
+    "storage",
+    "activeTab",
+    "contextMenus"
+  ],
+  "options_ui": {
+    "page": "options/options.html",
+    "open_in_tab": true
+  },
+  "commands": {
+    "normalize_selected_text": {
+      "suggested_key": {
+        "default": "Alt+Shift+N",
+        "mac": "Alt+Shift+N"
+      },
+      "description": "نرمال‌سازی و تنظیم نیم‌فاصله متن انتخاب‌شده"
+    },
+    "formalize_selected_text": {
+      "suggested_key": {
+        "default": "Alt+Shift+F",
+        "mac": "Alt+Shift+F"
+      },
+      "description": "رسمی‌سازی متن محاوره‌ای انتخاب‌شده"
+    }
+  }
+}

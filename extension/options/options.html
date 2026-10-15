@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <title>تنظیمات ویراستار فارسی امـاچ</title>
+  <style>
+    body {
+      background-color: #0f172a;
+      color: #f8fafc;
+      font-family: 'Vazirmatn', -apple-system, BlinkMacSystemFont, 'Segoe UI', Tahoma, sans-serif;
+      padding: 40px;
+      margin: 0;
+      direction: rtl;
+    }
+    .options-card {
+      max-width: 600px;
+      margin: 0 auto;
+      background: #1e293b;
+      padding: 30px;
+      border-radius: 16px;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+      border: 1px solid #334155;
+    }
+    h1 {
+      font-size: 22px;
+      color: #38bdf8;
+      margin-bottom: 8px;
+    }
+    p.desc {
+      color: #94a3b8;
+      font-size: 13px;
+      margin-bottom: 25px;
+    }
+    .setting-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px 0;
+      border-bottom: 1px solid #334155;
+    }
+    .setting-label b {
+      display: block;
+      font-size: 14px;
+      color: #f1f5f9;
+      margin-bottom: 4px;
+    }
+    .setting-label span {
+      font-size: 12px;
+      color: #94a3b8;
+    }
+    /* Switch component */
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 48px;
+      height: 26px;
+    }
+    .switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background-color: #475569;
+      transition: .3s;
+      border-radius: 34px;
+    }
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 20px;
+      width: 20px;
+      left: 3px;
+      bottom: 3px;
+      background-color: white;
+      transition: .3s;
+      border-radius: 50%;
+    }
+    input:checked + .slider {
+      background-color: #2563eb;
+    }
+    input:checked + .slider:before {
+      transform: translateX(22px);
+    }
+    .btn-save {
+      margin-top: 25px;
+      background: #059669;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: filter 0.15s;
+    }
+    .btn-save:hover {
+      filter: brightness(1.1);
+    }
+    .save-alert {
+      margin-top: 15px;
+      color: #34d399;
+      font-size: 13px;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="options-card">
+    <h1>⚙️ تنظیمات ویراستار فارسی امـاچ</h1>
+    <p class="desc">شخصی‌سازی نحوه رفتار، اعتبارسنجی‌ها و ابزارک‌های تعاملی در صفحات وب</p>
+
+    <div class="setting-row">
+      <div class="setting-label">
+        <b>دکمه شناور تعاملی (Floating Action Button)</b>
+        <span>نمایش آیکون امـاچ هنگام انتخاب (Select) متون در صفحات وب و پیام‌رسان‌ها</span>
+      </div>
+      <label class="switch">
+        <input type="checkbox" id="opt-floating" checked>
+        <span class="slider"></span>
+      </label>
+    </div>
+
+    <div class="setting-row">
+      <div class="setting-label">
+        <b>تنظیم خودکار ارقام فارسی</b>
+        <span>تبدیل خودکار ارقام انگلیسی و عربی به فارسی در هنگام پاک‌سازی</span>
+      </div>
+      <label class="switch">
+        <input type="checkbox" id="opt-digits" checked>
+        <span class="slider"></span>
+      </label>
+    </div>
+
+    <div class="setting-row">
+      <div class="setting-label">
+        <b>غلط‌یاب خودکار با حروف هم‌آوا</b>
+        <span>شناسایی اشتباهات املایی کلمات مشابه صوتی (ص/س، ض/ز/ظ/ذ، ت/ط)</span>
+      </div>
+      <label class="switch">
+        <input type="checkbox" id="opt-spell" checked>
+        <span class="slider"></span>
+      </label>
+    </div>
+
+    <div class="setting-row">
+      <div class="setting-label">
+        <b>اصلاح پیشرفته نیم‌فاصله</b>
+        <span>اعمال قواعد فرهنگستان برای پیشوندهای می‌/نمی‌ و پسوندهای ها/تر/ترین</span>
+      </div>
+      <label class="switch">
+        <input type="checkbox" id="opt-zwnj" checked>
+        <span class="slider"></span>
+      </label>
+    </div>
+
+    <button id="btn-save" class="btn-save">ذخیره تنظیمات</button>
+    <div id="save-msg" class="save-alert">تنظیمات با موفقیت ذخیره گردید. ✓</div>
+  </div>
+
+  <script src="options.js"></script>
+</body>
+</html>
