@@ -341,7 +341,33 @@ export interface DocumentOptions {
 // ─── LLM Hybrid Adapter Types ────────────────────────────────────────
 
 /** لحن و سیاق هدف برای بازنویسی با مدل‌های زبانی */
-export type LLMTargetTone = 'administrative' | 'academic' | 'formal' | 'literary';
+export type LLMTargetTone =
+  | 'administrative'  // حقوقی، رسمی و سازمانی
+  | 'academic'        // علمی، دانشگاهی و پژوهشی
+  | 'formal'          // رسمی عمومی و خبری
+  | 'literary'        // فاخر و ادیبانه
+  | 'summary'         // خلاصه و تیتروار (Bullet points)
+  | 'persuasive'      // متقاعدکننده و حماسی (مارکتینگ و انگیزشی)
+  | 'friendly';       // دوستانه و صمیمی (محترمانه)
+
+/** ارائه‌دهندگان پشتیبانی‌شده مدل‌های زبانی */
+export type LLMProviderType = 'gemini' | 'openai' | 'ollama' | 'custom';
+
+/** پیکربندی اتصال به مدل‌های زبانی */
+export interface LLMProviderConfig {
+  /** نوع ارائه‌دهنده: gemini | openai | ollama | custom */
+  type: LLMProviderType;
+  /** کلید احراز هویت API */
+  apiKey?: string;
+  /** آدرس اختصاصی اندپوینت (به خصوص برای Ollama یا پروکسی‌ها) */
+  endpoint?: string;
+  /** نام مدل (مانند gemini-2.0-flash, gpt-4o-mini, qwen2.5:7b, llama3.1) */
+  model?: string;
+  /** دمای تولید پاسخ (۰.۰ تا ۱.۰) */
+  temperature?: number;
+  /** حداکثر توکن‌های خروجی */
+  maxTokens?: number;
+}
 
 /** بسته داده آماده برای ارسال به مدل‌های زبان بزرگ (LLMs) */
 export interface PreparedLLMInput {
@@ -369,7 +395,12 @@ export interface HybridPipelineOptions {
   persianDigits?: boolean;
   /** اضافه کردن دستورالعمل‌های فرهنگستان زبان و ادب فارسی */
   enforceFarhangestanRules?: boolean;
+  /** پیکربندی اتصال به سرویس هوش مصنوعی */
+  provider?: LLMProviderConfig;
 }
+
+/** گزینه‌های بازنویسی هوشمند هوش مصنوعی */
+export interface AIRewriteOptions extends HybridPipelineOptions {}
 
 // ─── Document Scanner & CLI 2.0 Types ────────────────────────────────
 

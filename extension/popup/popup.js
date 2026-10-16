@@ -114,6 +114,9 @@ document.addEventListener('DOMContentLoaded', () => {
   function getToneLabel(tone) {
     switch (tone) {
       case 'academic': return 'نگارش علمی';
+      case 'summary': return 'خلاصه و تیتروار';
+      case 'persuasive': return 'متقاعدکننده و حماسی';
+      case 'friendly': return 'دوستانه و صمیمی';
       case 'customer-support': return 'پشتیبانی مشتریان';
       case 'colloquial-cleanup': return 'روان‌سازی عمومی';
       case 'administrative':
@@ -292,7 +295,51 @@ document.addEventListener('DOMContentLoaded', () => {
     showNotification('تمام اشتباهات املایی با موفقیت تصحیح شدند ✨');
   });
 
-  // ۴. کپی در کلیپ‌بورد با بازخورد پویا
+  // ۴. بازنویسی هوشمند پاراگراف با هوش مصنوعی (AI Rewriter)
+  const btnAiRewrite = document.getElementById('btn-ai-rewrite');
+  const aiSubText = document.getElementById('ai-sub-text');
+
+  if (btnAiRewrite) {
+    btnAiRewrite.addEventListener('click', async () => {
+      const text = inputEl.value;
+      if (!text.trim()) {
+        showNotification('لطفاً ابتدا متنی را برای بازنویسی وارد نمایید.', 'warning');
+        return;
+      }
+
+      showNotification('🤖 در حال بازنویسی هوشمند متن با هوش مصنوعی...', 'info');
+      if (aiSubText) aiSubText.textContent = 'در حال بازنویسی...';
+
+      try {
+        const storage = await new Promise(r => chrome.storage.sync.get(['amach_ai_settings'], r));
+        const aiSettings = storage.amach_ai_settings || {
+          provider: 'ollama',
+          model: 'qwen2.5:7b',
+        };
+
+        const res = await Writer.rewriteWithLLM(text, {
+          targetTone: currentTone,
+          provider: {
+            type: aiSettings.provider || 'ollama',
+            apiKey: aiSettings.apiKey,
+            model: aiSettings.model,
+            endpoint: aiSettings.endpoint,
+          },
+        });
+
+        inputEl.value = res.finalText;
+        updateStats();
+        if (aiSubText) aiSubText.textContent = (aiSettings.provider || 'Ollama').toUpperCase();
+        showNotification('متن با هوش مصنوعی بازنویسی و توسط هسته ام‌اچ پالایش شد ✨');
+      } catch (err) {
+        console.error('AI Rewrite Error', err);
+        if (aiSubText) aiSubText.textContent = 'خطا در اتصال';
+        showNotification(`خطا در هوش مصنوعی: ${err.message || 'عدم دسترسی'}. به صفحه تنظیمات مراجعه فرمایید.`, 'warning');
+      }
+    });
+  }
+
+  // ۵. کپی در کلیپ‌بورد با بازخورد پویا
   btnCopy.addEventListener('click', async () => {
     const text = inputEl.value;
     if (!text.trim()) {

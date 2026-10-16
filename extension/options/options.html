@@ -533,6 +533,59 @@
       </div>
     </section>
 
+    <!-- بخش تنظیمات موتور هیبریدی هوش مصنوعی (Hybrid AI Engine) -->
+    <section class="settings-card">
+      <div class="section-title">
+        <span>🤖</span> موتور هیبریدی هوش مصنوعی (Local Engine + Cloud LLMs)
+      </div>
+      <p style="font-size: 12.5px; color: var(--text-secondary); margin-bottom: 12px;">
+        برای بازنویسی‌های عمیق، خلاصه‌سازی و تغییر لحن پاراگراف‌ها، می‌توانید از مدل‌های محلی (Ollama) یا کلیدهای ابری (Gemini / OpenAI) استفاده کنید. تمام تنظیمات به صورت امن و محلی در مرورگر شما نگهداری می‌شوند:
+      </p>
+
+      <div class="setting-row">
+        <div class="setting-info">
+          <b>ارائه‌دهنده هوش مصنوعی (AI Provider)</b>
+          <span>انتخاب سرور محلی آفلاین یا سرویس‌های ابری</span>
+        </div>
+        <select id="ai-provider" class="tone-select">
+          <option value="ollama">Ollama محلی (آفلاین ۱۰۰٪، رایگان و خصوصی)</option>
+          <option value="gemini">Google Gemini API (فوق‌سریع با کیفیت بالا)</option>
+          <option value="openai">OpenAI API (GPT-4o-mini / ChatGPT)</option>
+        </select>
+      </div>
+
+      <div class="setting-row">
+        <div class="setting-info">
+          <b>نام مدل زبانی (Model Name)</b>
+          <span>مثال: qwen2.5:7b, gemini-1.5-flash, gpt-4o-mini</span>
+        </div>
+        <input type="text" id="ai-model" class="dict-input" style="max-width: 220px;" placeholder="qwen2.5:7b">
+      </div>
+
+      <div class="setting-row" id="row-ai-endpoint">
+        <div class="setting-info">
+          <b>آدرس سرور اختصاصی (Endpoint URL)</b>
+          <span>پیش‌فرض Ollama: http://localhost:11434/api/chat</span>
+        </div>
+        <input type="text" id="ai-endpoint" class="dict-input" style="max-width: 260px;" placeholder="http://localhost:11434/api/chat">
+      </div>
+
+      <div class="setting-row" id="row-ai-key">
+        <div class="setting-info">
+          <b>کلید اختصاصی API (API Key)</b>
+          <span>الزامی برای سرویس‌های Google Gemini یا OpenAI</span>
+        </div>
+        <input type="password" id="ai-api-key" class="dict-input" style="max-width: 240px;" placeholder="sk-... یا کلید Google">
+      </div>
+
+      <div class="save-bar">
+        <button type="button" id="btn-save-ai" class="btn-save" style="background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);">ذخیره تنظیمات هوش مصنوعی</button>
+        <div id="ai-save-msg" class="save-alert">
+          <span>✓</span> تنظیمات هوش مصنوعی با موفقیت ثبت شد.
+        </div>
+      </div>
+    </section>
+
     <!-- محیط آزمون زنده (Live Playground) -->
     <section class="playground-card">
       <div class="section-title">

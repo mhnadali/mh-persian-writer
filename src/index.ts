@@ -36,6 +36,9 @@ export type {
   DocumentData,
   DocumentOptions,
   LLMTargetTone,
+  LLMProviderType,
+  LLMProviderConfig,
+  AIRewriteOptions,
   PreparedLLMInput,
   HybridPipelineOptions,
   ScanIssueType,
@@ -165,7 +168,9 @@ export {
   prepareTextForLLM,
   getSystemPromptForTone,
   postProcessLLMOutput,
+  invokeLLMProvider,
   createHybridPipeline,
+  rewriteWithLLM,
 } from './llm-adapter';
 
 // ─── Document Scanner & Diff (CLI 2.0) ──────────────────────────────

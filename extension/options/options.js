@@ -28,10 +28,16 @@ document.addEventListener('DOMContentLoaded', () => {
   const btnTest = document.getElementById('btn-test');
   const testOutput = document.getElementById('test-output');
 
-  let customDictionary = [];
+  // المان‌های تنظیمات موتور هوش مصنوعی
+  const aiProvider = document.getElementById('ai-provider');
+  const aiModel = document.getElementById('ai-model');
+  const aiEndpoint = document.getElementById('ai-endpoint');
+  const aiApiKey = document.getElementById('ai-api-key');
+  const btnSaveAi = document.getElementById('btn-save-ai');
+  const aiSaveMsg = document.getElementById('ai-save-msg');
 
-  // ۱. بارگذاری تنظیمات و واژه‌نامه شخصی
-  chrome.storage.sync.get(['amach_settings', 'amach_custom_dict'], (result) => {
+  // ۱. بارگذاری تنظیمات، واژه‌نامه شخصی و هوش مصنوعی
+  chrome.storage.sync.get(['amach_settings', 'amach_custom_dict', 'amach_ai_settings'], (result) => {
     if (result.amach_settings) {
       const s = result.amach_settings;
       if (optRealtime) optRealtime.checked = s.realtimeAssistant ?? true;
@@ -46,7 +52,55 @@ document.addEventListener('DOMContentLoaded', () => {
       customDictionary = result.amach_custom_dict;
     }
     renderCustomDictChips();
+
+    if (result.amach_ai_settings) {
+      const ai = result.amach_ai_settings;
+      if (aiProvider && ai.provider) aiProvider.value = ai.provider;
+      if (aiModel && ai.model) aiModel.value = ai.model;
+      if (aiEndpoint && ai.endpoint) aiEndpoint.value = ai.endpoint;
+      if (aiApiKey && ai.apiKey) aiApiKey.value = ai.apiKey;
+    }
   });
+
+  // تغییر هوشمند مقادیر پیش‌فرض با انتخاب ارائه‌دهنده
+  if (aiProvider) {
+    aiProvider.addEventListener('change', () => {
+      const p = aiProvider.value;
+      if (p === 'ollama') {
+        if (aiModel && !aiModel.value) aiModel.value = 'qwen2.5:7b';
+        if (aiEndpoint && !aiEndpoint.value) aiEndpoint.value = 'http://localhost:11434/api/chat';
+      } else if (p === 'gemini') {
+        if (aiModel && (!aiModel.value || aiModel.value.includes('qwen') || aiModel.value.includes('gpt'))) {
+          aiModel.value = 'gemini-1.5-flash';
+        }
+      } else if (p === 'openai') {
+        if (aiModel && (!aiModel.value || aiModel.value.includes('qwen') || aiModel.value.includes('gemini'))) {
+          aiModel.value = 'gpt-4o-mini';
+        }
+      }
+    });
+  }
+
+  // ذخیره تنظیمات هوش مصنوعی
+  if (btnSaveAi) {
+    btnSaveAi.addEventListener('click', () => {
+      const aiSettings = {
+        provider: aiProvider ? aiProvider.value : 'ollama',
+        model: aiModel ? aiModel.value.trim() : 'qwen2.5:7b',
+        endpoint: aiEndpoint ? aiEndpoint.value.trim() : '',
+        apiKey: aiApiKey ? aiApiKey.value.trim() : '',
+      };
+
+      chrome.storage.sync.set({ amach_ai_settings: aiSettings }, () => {
+        if (aiSaveMsg) {
+          aiSaveMsg.classList.add('show');
+          setTimeout(() => {
+            aiSaveMsg.classList.remove('show');
+          }, 2400);
+        }
+      });
+    });
+  }
 
   // رندر واژه‌های دیکشنری شخصی به صورت چیپ‌های تعاملی
   function renderCustomDictChips() {

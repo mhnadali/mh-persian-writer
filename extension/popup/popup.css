@@ -410,6 +410,18 @@ textarea::placeholder {
   border-color: rgba(251, 191, 36, 0.4);
 }
 
+.btn-action.ai {
+  background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+  border-color: rgba(167, 139, 250, 0.5);
+  box-shadow: 0 4px 14px rgba(99, 102, 241, 0.3);
+}
+
+.btn-action.ai:hover {
+  background: linear-gradient(135deg, #4338ca 0%, #6d28d9 100%);
+  border-color: #c084fc;
+  box-shadow: 0 6px 18px rgba(168, 85, 247, 0.4);
+}
+
 .btn-action.success {
   background: linear-gradient(135deg, #059669 0%, #047857 100%);
   border-color: rgba(52, 211, 153, 0.4);

@@ -35,9 +35,12 @@
       <div class="editor-toolbar">
         <div class="toolbar-left">
           <span class="char-counter" id="stat-chars">۰ کاراکتر</span>
-          <select id="select-popup-tone" class="popup-tone-select" title="لحن رسمی‌سازی">
+          <select id="select-popup-tone" class="popup-tone-select" title="لحن نگارش">
             <option value="administrative">اداری</option>
             <option value="academic">علمی</option>
+            <option value="summary">تیتروار</option>
+            <option value="persuasive">متقاعدکننده</option>
+            <option value="friendly">دوستانه</option>
             <option value="customer-support">پشتیبانی</option>
             <option value="colloquial-cleanup">روان‌سازی</option>
           </select>
@@ -96,6 +99,14 @@
         <div class="btn-content">
           <span class="btn-title">غلط‌یاب هوشمند</span>
           <span class="btn-sub" id="spell-sub-text">بررسی هم‌آواها</span>
+        </div>
+      </button>
+
+      <button id="btn-ai-rewrite" class="btn-action ai" title="بازنویسی هوشمند پاراگراف با هوش مصنوعی (Gemini / Ollama / OpenAI)">
+        <span class="btn-icon">🤖</span>
+        <div class="btn-content">
+          <span class="btn-title">بازنویسی هوش مصنوعی</span>
+          <span class="btn-sub" id="ai-sub-text">Ollama / Gemini</span>
         </div>
       </button>
 

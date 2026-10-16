@@ -33,17 +33,21 @@ import {
   renderColoredDiff,
   colors,
 } from './document-scanner';
-import { DocumentType, DocumentFormat, FormalityMode } from './types';
+import { rewriteWithLLM } from './llm-adapter';
+import { DocumentType, DocumentFormat, FormalityMode, LLMTargetTone, LLMProviderType } from './types';
 
 const args = process.argv.slice(2);
 const command = args[0];
 
 function showHelp() {
   console.log(`
-${colors.bold}${colors.cyan}mh-persian-writer CLI 2.0${colors.reset} - جعبه‌ابزار جامع و سازمانی پردازش و نوشتار زبان فارسی
+${colors.bold}${colors.cyan}mh-persian-writer CLI 2.0 (با موتور هیبریدی هوش مصنوعی)${colors.reset} - جعبه‌ابزار جامع پردازش زبان فارسی
 توسعه‌دهنده: ${colors.bold}محمدحسین نادعلی (M.H. Nadali)${colors.reset}
 
 ${colors.bold}دستورات خط فرمان:${colors.reset}
+  ${colors.green}ai <text> [options]${colors.reset}        بازنویسی هوشمند پاراگراف با مدل‌های زبانی (Gemini, OpenAI, Ollama)
+                             ${colors.gray}گزینه‌ها: --tone=administrative|academic|formal|literary|summary|persuasive|friendly${colors.reset}
+                             ${colors.gray}سایر: --provider=ollama|gemini|openai --model=... --key=...${colors.reset}
   ${colors.green}lint <files/dirs...>${colors.reset}       بررسی و اعتبارسنجی املایی، نیم‌فاصله و نگارشی اسناد (مناسب CI/CD)
                              ${colors.gray}گزینه‌ها: --fix (اصلاح خودکار), --strict (سخت‌گیرانه)${colors.reset}
   ${colors.green}diff <file>${colors.reset}                 نمایش رنگی تفاوت‌های متن اصلی و متن ویراستاری‌شده
@@ -64,12 +68,11 @@ ${colors.bold}دستورات خط فرمان:${colors.reset}
   ${colors.green}--version, -v${colors.reset}              نمایش نسخه پکیج
 
 ${colors.bold}مثال‌های کاربردی:${colors.reset}
+  npx mh-persian-writer ai "سلام متن بازاری دارم می‌خوام رسمی بشه" --tone=administrative
+  npx mh-persian-writer ai "ویژگی‌های محصول ما" --tone=persuasive --provider=gemini
   npx mh-persian-writer lint docs/ README.md
-  npx mh-persian-writer lint src/content/ --fix
-  npx mh-persian-writer diff article.md --mode=all
   npx mh-persian-writer scan docs/ --mode=normalize --write
-  npx mh-persian-writer normalize "ميخوام برم به خانه ها"
-  npx mh-persian-writer spell "لطفا گذارش را برای مسعول ارسال کنید"
+  npx mh-persian-writer diff article.md --mode=all
 `);
 }
 
@@ -87,6 +90,53 @@ function runCli() {
   const subArgs = args.slice(1);
 
   switch (command) {
+    // ─── ۰. بازنویسی هوشمند پاراگراف با هوش مصنوعی (AI Rewriter) ────────
+    case 'ai': {
+      const toneArg = subArgs.find(a => a.startsWith('--tone='));
+      const tone = (toneArg ? toneArg.split('=')[1] : 'administrative') as LLMTargetTone;
+
+      const providerArg = subArgs.find(a => a.startsWith('--provider='));
+      const providerType = (providerArg ? providerArg.split('=')[1] : 'ollama') as LLMProviderType;
+
+      const modelArg = subArgs.find(a => a.startsWith('--model='));
+      const model = modelArg ? modelArg.split('=')[1] : undefined;
+
+      const keyArg = subArgs.find(a => a.startsWith('--key='));
+      const apiKey = keyArg ? keyArg.split('=')[1] : undefined;
+
+      const endpointArg = subArgs.find(a => a.startsWith('--endpoint='));
+      const endpoint = endpointArg ? endpointArg.split('=')[1] : undefined;
+
+      const textArgs = subArgs.filter(a => !a.startsWith('--'));
+      const inputString = textArgs.join(' ').replace(/^["']|["']$/g, '');
+
+      if (!inputString) {
+        console.error(`${colors.red}خطا: لطفاً متن مورد نظر برای بازنویسی با هوش مصنوعی را وارد نمایید.${colors.reset}`);
+        return;
+      }
+
+      console.log(`${colors.cyan}🤖 در حال بازنویسی هوشمند متن با مدل ${providerType}${model ? ` (${model})` : ''} در لحن «${tone}»...${colors.reset}`);
+
+      rewriteWithLLM(inputString, {
+        targetTone: tone,
+        provider: {
+          type: providerType,
+          apiKey,
+          model,
+          endpoint,
+        },
+      })
+        .then((res) => {
+          console.log(`\n${colors.bold}${colors.green}متن نهایی بازنویسی‌شده:${colors.reset}`);
+          console.log(res.finalText);
+        })
+        .catch((err) => {
+          console.error(`\n${colors.red}خطا در بازنویسی با هوش مصنوعی: ${err.message}${colors.reset}`);
+          process.exit(1);
+        });
+      break;
+    }
+
     // ─── ۱. دستور lint برای CI/CD و Git Hooks ──────────────────────────
     case 'lint': {
       const fix = subArgs.includes('--fix');
