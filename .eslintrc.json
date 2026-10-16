@@ -4,7 +4,7 @@
   "parserOptions": {
     "ecmaVersion": 2022,
     "sourceType": "module",
-    "project": "./tsconfig.json"
+    "project": "./tsconfig.eslint.json"
   },
   "plugins": ["@typescript-eslint"],
   "extends": [
@@ -19,5 +19,22 @@
     "no-console": "warn",
     "eqeqeq": ["error", "always"]
   },
+  "overrides": [
+    {
+      "files": ["tests/**/*.ts"],
+      "rules": {
+        "@typescript-eslint/explicit-function-return-type": "off",
+        "@typescript-eslint/no-explicit-any": "off",
+        "@typescript-eslint/no-unsafe-assignment": "off",
+        "@typescript-eslint/no-unsafe-member-access": "off",
+        "@typescript-eslint/no-unsafe-call": "off",
+        "@typescript-eslint/no-unsafe-return": "off",
+        "@typescript-eslint/no-unsafe-argument": "off",
+        "@typescript-eslint/no-floating-promises": "off",
+        "@typescript-eslint/no-unused-vars": "off",
+        "@typescript-eslint/require-await": "off"
+      }
+    }
+  ],
   "ignorePatterns": ["dist/", "node_modules/", "*.config.ts"]
 }

@@ -71,7 +71,8 @@ export function fixPunctuation(text: string): string {
 export function removeExtraWhitespace(text: string): string {
   if (!text) return '';
   return text
-    .replace(/[\u200B\u200D\u200E\u200F\uFEFF]/g, '') // Remove ZWJ, LRM, RLM, BOM, etc.
+    .replace(/\u200D/g, '') // Remove ZWJ
+    .replace(/[\u200B\u200E\u200F\uFEFF]/g, '') // Remove LRM, RLM, BOM, zero-width space
     .replace(/[ \t]+/g, ' ') // Collapse multiple spaces and tabs
     .replace(/\n\s*\n/g, '\n\n') // Collapse multiple empty lines
     .trim();
@@ -86,10 +87,10 @@ export function removeExtraWhitespace(text: string): string {
 export function toPersianDigits(text: string): string {
   if (!text) return '';
   return text.replace(/[0-9٠-٩]/g, char => {
-    const enIndex = ENGLISH_DIGITS.indexOf(char as any);
+    const enIndex = (ENGLISH_DIGITS as readonly string[]).indexOf(char);
     if (enIndex !== -1) return PERSIAN_DIGITS[enIndex];
     
-    const arIndex = ARABIC_DIGITS.indexOf(char as any);
+    const arIndex = (ARABIC_DIGITS as readonly string[]).indexOf(char);
     if (arIndex !== -1) return PERSIAN_DIGITS[arIndex];
     
     return char;
@@ -105,10 +106,10 @@ export function toPersianDigits(text: string): string {
 export function toEnglishDigits(text: string): string {
   if (!text) return '';
   return text.replace(/[۰-۹٠-٩]/g, char => {
-    const faIndex = PERSIAN_DIGITS.indexOf(char as any);
+    const faIndex = (PERSIAN_DIGITS as readonly string[]).indexOf(char);
     if (faIndex !== -1) return ENGLISH_DIGITS[faIndex];
     
-    const arIndex = ARABIC_DIGITS.indexOf(char as any);
+    const arIndex = (ARABIC_DIGITS as readonly string[]).indexOf(char);
     if (arIndex !== -1) return ENGLISH_DIGITS[arIndex];
     
     return char;
@@ -129,13 +130,13 @@ export function fixHalfSpace(text: string): string {
   result = result.replace(/(^|\s)(می|نمی|بی)\s+([^ \n\r\t]+)/gu, `$1$2${ZWNJ}$3`);
 
   // Add ZWNJ before suffixes (ها, های, هایی, تر, ترین, تری)
-  result = result.replace(/([^ \n\r\t\u200C]+)\s+(ها|های|هایی|تر|ترین|تری)(?=[ \t\n\r،؛!؟\.]|$)/gu, `$1${ZWNJ}$2`);
+  result = result.replace(/([^ \n\r\t\u200C]+)\s+(ها|های|هایی|تر|ترین|تری)(?=[ \t\n\r،؛!؟.]|$)/gu, `$1${ZWNJ}$2`);
 
   // Standard Academy Ezafe normalization for words ending with silent Heh (ه ی -> ه‌ی)
-  result = result.replace(/([^ \n\r\t\u200C]+ه)\s+ی(?=[ \t\n\r،؛!؟\.]|$)/gu, `$1${ZWNJ}ی`);
+  result = result.replace(/([^ \n\r\t\u200C]+ه)\s+ی(?=[ \t\n\r،؛!؟.]|$)/gu, `$1${ZWNJ}ی`);
 
   // Convert space + suffix to ZWNJ + suffix for verbal/pronominal endings
-  result = result.replace(/([^ \n\r\t\u200C]+)\s+(ام|ات|اش|اید|اند)(?=[ \t\n\r،؛!؟\.]|$)/gu, `$1${ZWNJ}$2`);
+  result = result.replace(/([^ \n\r\t\u200C]+)\s+(ام|ات|اش|اید|اند)(?=[ \t\n\r،؛!؟.]|$)/gu, `$1${ZWNJ}$2`);
 
   // Remove duplicate ZWNJs
   const zwnjRegex = new RegExp(`${ZWNJ}{2,}`, 'g');

@@ -118,7 +118,7 @@ export function processHtml(content: string, transform: (text: string) => string
   });
 
   // تبدیل متن‌های واقع در میان تگ‌های HTML (>متن<)
-  protectedContent = protectedContent.replace(/(>)([^<]+)(<)/g, (_match, open, text, close) => {
+  protectedContent = protectedContent.replace(/(>)([^<]+)(<)/g, (_match: string, open: string, text: string, close: string) => {
     if (!text.trim() || !isPersian(text)) return open + text + close;
     return open + transform(text) + close;
   });
@@ -133,6 +133,23 @@ export function processHtml(content: string, transform: (text: string) => string
   return protectedContent;
 }
 
+function walkJson(obj: unknown, transform: (text: string) => string): unknown {
+  if (typeof obj === 'string') {
+    return isPersian(obj) ? transform(obj) : obj;
+  }
+  if (Array.isArray(obj)) {
+    return obj.map(item => walkJson(item, transform));
+  }
+  if (obj !== null && typeof obj === 'object') {
+    const res: Record<string, unknown> = {};
+    for (const [key, value] of Object.entries(obj)) {
+      res[key] = walkJson(value, transform);
+    }
+    return res;
+  }
+  return obj;
+}
+
 /**
  * پردازش فایل‌های JSON با پیمایش بازگشتی مقادیر رشته‌ای فارسی
  *
@@ -142,26 +159,8 @@ export function processHtml(content: string, transform: (text: string) => string
  */
 export function processJson(content: string, transform: (text: string) => string): string {
   try {
-    const parsed = JSON.parse(content);
-
-    function walk(obj: any): any {
-      if (typeof obj === 'string') {
-        return isPersian(obj) ? transform(obj) : obj;
-      }
-      if (Array.isArray(obj)) {
-        return obj.map(walk);
-      }
-      if (obj !== null && typeof obj === 'object') {
-        const res: Record<string, any> = {};
-        for (const key of Object.keys(obj)) {
-          res[key] = walk(obj[key]);
-        }
-        return res;
-      }
-      return obj;
-    }
-
-    const transformed = walk(parsed);
+    const parsed: unknown = JSON.parse(content);
+    const transformed = walkJson(parsed, transform);
     return JSON.stringify(transformed, null, 2) + '\n';
   } catch {
     // در صورت نامعتبر بودن ساختار JSON، متن به عنوان متن عادی پردازش می‌شود
@@ -358,7 +357,7 @@ export function scanDirectoryOrFiles(targets: string[], options: FileProcessOpti
   const ignoredDirs = new Set(['node_modules', '.git', 'dist', 'coverage', '.gemini', 'build']);
   const allowedExtensions = new Set(['.md', '.markdown', '.txt', '.json', '.html', '.htm']);
 
-  function collectFiles(dirOrFile: string) {
+  function collectFiles(dirOrFile: string): void {
     const fullPath = path.resolve(dirOrFile);
     if (!fs.existsSync(fullPath)) return;
 

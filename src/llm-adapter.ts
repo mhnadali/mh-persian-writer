@@ -208,7 +208,17 @@ export async function invokeLLMProvider(
           throw new Error(`خطای ارتباط با Gemini API (وضعیت: ${response.status}): ${errorText}`);
         }
 
-        const data: any = await response.json();
+        interface GeminiResponse {
+          candidates?: Array<{
+            content?: {
+              parts?: Array<{
+                text?: string;
+              }>;
+            };
+          }>;
+        }
+
+        const data = (await response.json()) as GeminiResponse;
         const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
         if (!text) {
           throw new Error('پاسخی از مدل Gemini دریافت نشد.');
@@ -247,7 +257,15 @@ export async function invokeLLMProvider(
           throw new Error(`خطای ارتباط با OpenAI API (وضعیت: ${response.status}): ${errorText}`);
         }
 
-        const data: any = await response.json();
+        interface OpenAIResponse {
+          choices?: Array<{
+            message?: {
+              content?: string;
+            };
+          }>;
+        }
+
+        const data = (await response.json()) as OpenAIResponse;
         const text = data?.choices?.[0]?.message?.content;
         if (!text) {
           throw new Error('پاسخی از مدل OpenAI دریافت نشد.');
@@ -282,7 +300,13 @@ export async function invokeLLMProvider(
           throw new Error(`خطای Ollama (وضعیت: ${response.status}): ${errorText}`);
         }
 
-        const data: any = await response.json();
+        interface OllamaResponse {
+          message?: {
+            content?: string;
+          };
+        }
+
+        const data = (await response.json()) as OllamaResponse;
         const text = data?.message?.content;
         if (!text) {
           throw new Error(`پاسخی از مدل ${ollamaModel} در Ollama دریافت نشد.`);
@@ -313,21 +337,28 @@ export async function invokeLLMProvider(
           throw new Error(`خطا در ارائه‌دهنده سفارشی (وضعیت: ${response.status})`);
         }
 
-        const data: any = await response.json();
+        interface CustomResponse {
+          text?: string;
+          content?: string;
+          result?: string;
+        }
+
+        const data = (await response.json()) as CustomResponse;
         return data.text || data.content || data.result || JSON.stringify(data);
       }
 
       default:
-        throw new Error(`ارائه‌دهنده هوش مصنوعی ناشناخته: ${type}`);
+        throw new Error(`ارائه‌دهنده هوش مصنوعی ناشناخته: ${String(type)}`);
     }
-  } catch (err: any) {
-    if (err.name === 'TimeoutError' || (err.message && err.message.toLowerCase().includes('timeout'))) {
+  } catch (err: unknown) {
+    const errorObj = err instanceof Error ? err : new Error(String(err));
+    if (errorObj.name === 'TimeoutError' || errorObj.message.toLowerCase().includes('timeout')) {
       throw new Error(`خطای مهلت زمانی: ارتباط با سرویس هوش مصنوعی پس از ${Math.round(timeoutMs / 1000)} ثانیه قطع شد.`);
     }
-    if (err.message && err.message.includes('ECONNREFUSED')) {
+    if (errorObj.message.includes('ECONNREFUSED')) {
       throw new Error('ارتباط با سرور محلی Ollama برقرار نشد. لطفاً اطمینان حاصل کنید Ollama با دستور `ollama serve` در حال اجرا است.');
     }
-    throw err;
+    throw errorObj;
   }
 }
 

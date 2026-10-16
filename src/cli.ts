@@ -13,6 +13,7 @@
  * @author M.H. Nadali
  */
 
+import * as fs from 'fs';
 import * as path from 'path';
 import { normalize } from './normalizer';
 import { checkFormality, toFormal } from './formal-writer';
@@ -130,8 +131,9 @@ function runCli() {
           console.log(`\n${colors.bold}${colors.green}متن نهایی بازنویسی‌شده:${colors.reset}`);
           console.log(res.finalText);
         })
-        .catch((err) => {
-          console.error(`\n${colors.red}خطا در بازنویسی با هوش مصنوعی: ${err.message}${colors.reset}`);
+        .catch((err: unknown) => {
+          const errMsg = err instanceof Error ? err.message : String(err);
+          console.error(`\n${colors.red}خطا در بازنویسی با هوش مصنوعی: ${errMsg}${colors.reset}`);
           process.exit(1);
         });
       break;
@@ -203,11 +205,12 @@ function runCli() {
 
       try {
         const res = processFile(filePath, { mode, write: false });
-        const original = require('fs').readFileSync(res.filePath, 'utf-8');
+        const original = fs.readFileSync(res.filePath || filePath, 'utf-8');
         console.log(`\n${colors.bold}تفاوت‌های فایل: ${filePath} (${mode})${colors.reset}`);
         console.log(renderColoredDiff(original, res.fixedText));
-      } catch (err: any) {
-        console.error(`${colors.red}خطا در پردازش فایل: ${err.message}${colors.reset}`);
+      } catch (err: unknown) {
+        const errMsg = err instanceof Error ? err.message : String(err);
+        console.error(`${colors.red}خطا در پردازش فایل: ${errMsg}${colors.reset}`);
         process.exit(1);
       }
       break;
@@ -232,8 +235,8 @@ function runCli() {
         const relPath = path.relative(process.cwd(), res.filePath || '');
         if (res.hasChanges) {
           console.log(`${colors.yellow}• تغییر یافته: ${relPath}${colors.reset}`);
-          if (showDiff) {
-            const original = require('fs').readFileSync(res.filePath, 'utf-8');
+          if (showDiff && res.filePath) {
+            const original = fs.readFileSync(res.filePath, 'utf-8');
             console.log(renderColoredDiff(original, res.fixedText));
             console.log('────────────────────────────────────────');
           }

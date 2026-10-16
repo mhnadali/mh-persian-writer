@@ -26,7 +26,7 @@ const B_POST = '(?=[\\s،؛.!?؟()«»"\'\\[\\]{}:–—-]|$)' ;
 
 interface ContextualRule {
   pattern: RegExp;
-  replace: (match: string, ...args: any[]) => string;
+  replace: (match: string, ...args: string[]) => string;
   suggestionMessage?: (match: string, replacement: string) => string;
   type?: 'informal_word' | 'colloquial_verb' | 'spacing' | 'structure';
   severity?: 'low' | 'medium' | 'high';
@@ -38,7 +38,7 @@ const CONTEXTUAL_RULES: ContextualRule[] = [
   // ۱. افعال استمراری محاوره‌ای با «داشتن» (داشتم می‌رفتم -> در حال رفتن بودم)
   {
     pattern: new RegExp(`${B_PRE}(داشتم|داشتی|داشت|داشتیم|داشتید|داشتند)\\s+(می‌|می)(رفتم|رفتی|رفت|رفتیم|رفتید|رفتند)${B_POST}`, 'gu'),
-    replace: (_m, aux) => {
+    replace: (_m: string, aux: string): string => {
       const pastEndingMap: Record<string, string> = {
         'داشتم': 'بودم',
         'داشتی': 'بودید',
@@ -56,7 +56,7 @@ const CONTEXTUAL_RULES: ContextualRule[] = [
   },
   {
     pattern: new RegExp(`${B_PRE}(داشتم|داشتی|داشت|داشتیم|داشتید|داشتند)\\s+(می‌|می)(گفتم|گفتی|گفت|گفتیم|گفتید|گفتند)${B_POST}`, 'gu'),
-    replace: (_m, aux) => {
+    replace: (_m: string, aux: string): string => {
       const pastEndingMap: Record<string, string> = {
         'داشتم': 'بودم',
         'داشتی': 'بودید',
@@ -74,7 +74,7 @@ const CONTEXTUAL_RULES: ContextualRule[] = [
   },
   {
     pattern: new RegExp(`${B_PRE}(داشتم|داشتی|داشت|داشتیم|داشتید|داشتند)\\s+(می‌|می)(نوشتم|نوشتی|نوشت|نوشتیم|نوشتید|نوشتند)${B_POST}`, 'gu'),
-    replace: (_m, aux) => {
+    replace: (_m: string, aux: string): string => {
       const pastEndingMap: Record<string, string> = {
         'داشتم': 'بودم',
         'داشتی': 'بودید',
@@ -94,7 +94,7 @@ const CONTEXTUAL_RULES: ContextualRule[] = [
   // ۲. تمایز هوشمند کلمه «میان»: فعل محاوره‌ای «دارن میان» در برابر حرف اضافه «میان»
   {
     pattern: new RegExp(`${B_PRE}(دارن|دارند|داره|داشتن|داشتند|کی|وقتی|الان|تازه)\\s+(میان)${B_POST}`, 'gu'),
-    replace: (_m, aux) => {
+    replace: (_m: string, aux: string): string => {
       if (aux === 'داره') return `${aux} می‌آید`;
       if (aux === 'دارن' || aux === 'دارند') return 'می‌آیند';
       return `${aux} می‌آیند`;
@@ -107,7 +107,7 @@ const CONTEXTUAL_RULES: ContextualRule[] = [
   // ۳. تمایز کلمه «تو» به عنوان حرف اضافه عامیانه در برابر ضمیر
   {
     pattern: new RegExp(`${B_PRE}(توی?)\\s+(ماشین|خانه|خونه|جلسه|اتاق|اداره|سایت|دانشگاه|خیابان|مدرسه|کلاس|بیمارستان|شرکت|دفتر|مسیر|راه|سامانه|سیستم|فایل|پروژه)${B_POST}`, 'gu'),
-    replace: (_m, _prep, noun) => {
+    replace: (_m: string, _prep: string, noun: string): string => {
       const formalNoun = noun === 'خونه' ? 'خانه' : noun;
       return `در ${formalNoun}`;
     },
@@ -119,7 +119,7 @@ const CONTEXTUAL_RULES: ContextualRule[] = [
   // ۴. نشانه مفعولی عامیانه «رو» پس از کلمات
   {
     pattern: new RegExp(`([آ-ی0-9]+)\\s+رو${B_POST}`, 'gu'),
-    replace: (match, word) => {
+    replace: (match: string, word: string): string => {
       // استثناهای کلماتی که خودشان با «رو» ترکیب حقیقی دارند
       const excludedWords = ['پیش', 'روبه‌', 'دست‌به', 'سر', 'پیش‌رو', 'رو'];
       if (excludedWords.includes(word)) return match;
@@ -132,8 +132,8 @@ const CONTEXTUAL_RULES: ContextualRule[] = [
 
   // ۵. اصلاح کلمه محاوره‌ای «خونه» با یا بدون وند
   {
-    pattern: new RegExp(`${B_PRE}خونه(?=[‌\\s،؛.!?؟()«»"'\\[\\]{}:–—-]|\$)`, 'gu'),
-    replace: () => 'خانه',
+    pattern: new RegExp(`${B_PRE}خونه(?=[‌\\s،؛.!?؟()«»"'\\[\\]{}:–—-]|$)`, 'gu'),
+    replace: (): string => 'خانه',
     suggestionMessage: (_m, _r) => 'به جای واژه محاوره‌ای «خونه» از «خانه» استفاده کنید.',
     type: 'informal_word',
     severity: 'medium'
@@ -209,7 +209,7 @@ const CONTEXTUAL_RULES: ContextualRule[] = [
   // ۷. عبارات چندکلمه‌ای پرکاربرد
   {
     pattern: new RegExp(`${B_PRE}حرف\\s+(زدن|زدیم|زدند|بزنیم|بزنید)${B_POST}`, 'gu'),
-    replace: (_m, verb) => {
+    replace: (_m: string, verb: string): string => {
       const verbMap: Record<string, string> = {
         'زدن': 'گفتگو نمودن',
         'زدیم': 'مذاکره نمودیم',
@@ -226,7 +226,7 @@ const CONTEXTUAL_RULES: ContextualRule[] = [
   },
   {
     pattern: new RegExp(`${B_PRE}زنگ\\s+(زدن|زدم|زدیم|زدند|بزنید|بزن)${B_POST}`, 'gu'),
-    replace: (_m, verb) => {
+    replace: (_m: string, verb: string): string => {
       const verbMap: Record<string, string> = {
         'زدن': 'تماس تلفنی حاصل نمودن',
         'زدم': 'تماس حاصل نمودم',

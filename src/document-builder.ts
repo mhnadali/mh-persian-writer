@@ -286,7 +286,7 @@ export function renderHtmlDocument(
   const today = getJalaliDate();
   const dateStr = data.date || (autoDate ? today.formattedPersianDigits : today.formatted);
 
-  const toP = (s?: string) => {
+  const toP = (s?: string): string => {
     if (!s) return '';
     return persianDigits ? toPersianDigits(s) : s;
   };

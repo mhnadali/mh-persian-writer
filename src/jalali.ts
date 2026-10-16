@@ -205,7 +205,7 @@ export function getJalaliDate(date: Date = new Date()): JalaliDateResult {
   const dayName = PERSIAN_WEEKDAYS[dayOfWeek];
   const isLeap = isJalaliLeapYear(jy);
 
-  const pad = (n: number) => n.toString().padStart(2, '0');
+  const pad = (n: number): string => n.toString().padStart(2, '0');
   const formatted = `${jy}/${pad(jm)}/${pad(jd)}`;
   const formattedPersianDigits = toPersianDigits(formatted);
   const officialFormat = `${dayName} ${toPersianDigits(jd.toString())} ${monthName}‌ماه سال ${toPersianDigits(jy.toString())}`;
@@ -237,7 +237,7 @@ export function formatJalaliDate(
   persianDigits: boolean = true
 ): string {
   const j = getJalaliDate(date);
-  const pad = (n: number) => n.toString().padStart(2, '0');
+  const pad = (n: number): string => n.toString().padStart(2, '0');
 
   let result = '';
 

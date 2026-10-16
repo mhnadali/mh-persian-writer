@@ -230,7 +230,7 @@ export function isWordCorrect(
   if (!cleaned || cleaned.length <= 1) return true;
 
   // ۱. عبور کلمات لاتین و انگلیسی، اعداد و علائم خاص (Google, Chrome, Lens, PDF, Gemini)
-  if (/^[a-zA-Z0-9_\-\.]+$/.test(cleaned)) {
+  if (/^[a-zA-Z0-9_\-.]+$/.test(cleaned)) {
     return true;
   }
 
@@ -443,7 +443,7 @@ export function spellCheck(
   let searchOffset = 0;
   for (const word of words) {
     // از کلمات تک‌حرفی، عددی یا لاتین صرف‌نظر می‌کنیم
-    if (word.length <= 1 || /^[a-zA-Z0-9_\-\.]+$/.test(word)) continue;
+    if (word.length <= 1 || /^[a-zA-Z0-9_\-.]+$/.test(word)) continue;
 
     // موقعیت دقیق وقوع کلمه در متن ورودی
     const wordPos = text.indexOf(word, searchOffset);

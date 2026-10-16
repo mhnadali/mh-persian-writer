@@ -111,9 +111,9 @@ export function toWords(num: number): string {
 export function toPersianDigits(text: string): string {
   if (!text) return text;
   return text.replace(/[0-9٠-٩]/g, (char) => {
-    const enIndex = ENGLISH_DIGITS.indexOf(char as any);
+    const enIndex = (ENGLISH_DIGITS as readonly string[]).indexOf(char);
     if (enIndex !== -1) return PERSIAN_DIGITS[enIndex];
-    const arIndex = ARABIC_DIGITS.indexOf(char as any);
+    const arIndex = (ARABIC_DIGITS as readonly string[]).indexOf(char);
     if (arIndex !== -1) return PERSIAN_DIGITS[arIndex];
     return char;
   });
@@ -128,9 +128,9 @@ export function toPersianDigits(text: string): string {
 export function toEnglishDigits(text: string): string {
   if (!text) return text;
   return text.replace(/[۰-۹٠-٩]/g, (char) => {
-    const faIndex = PERSIAN_DIGITS.indexOf(char as any);
+    const faIndex = (PERSIAN_DIGITS as readonly string[]).indexOf(char);
     if (faIndex !== -1) return ENGLISH_DIGITS[faIndex];
-    const arIndex = ARABIC_DIGITS.indexOf(char as any);
+    const arIndex = (ARABIC_DIGITS as readonly string[]).indexOf(char);
     if (arIndex !== -1) return ENGLISH_DIGITS[arIndex];
     return char;
   });
@@ -145,9 +145,9 @@ export function toEnglishDigits(text: string): string {
 export function toArabicDigits(text: string): string {
   if (!text) return text;
   return text.replace(/[0-9۰-۹]/g, (char) => {
-    const enIndex = ENGLISH_DIGITS.indexOf(char as any);
+    const enIndex = (ENGLISH_DIGITS as readonly string[]).indexOf(char);
     if (enIndex !== -1) return ARABIC_DIGITS[enIndex];
-    const faIndex = PERSIAN_DIGITS.indexOf(char as any);
+    const faIndex = (PERSIAN_DIGITS as readonly string[]).indexOf(char);
     if (faIndex !== -1) return ARABIC_DIGITS[faIndex];
     return char;
   });

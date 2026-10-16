@@ -6,11 +6,14 @@ import { normalize } from './normalizer';
 /**
  * Extracts a string array of tokens from a tokenizer result or array.
  */
-function getTokens(result: any): string[] {
-  if (Array.isArray(result)) return result;
-  if (result && Array.isArray(result.tokens)) return result.tokens;
+function getTokens(result: unknown): string[] {
+  if (Array.isArray(result)) return result as string[];
+  if (result && typeof result === 'object' && 'tokens' in result && Array.isArray((result as { tokens: unknown[] }).tokens)) {
+    return (result as { tokens: string[] }).tokens;
+  }
   return [];
 }
+
 
 const PERSIAN_EXTENDED_CHARS = new Set<string>([
   ...PERSIAN_ALPHABET,
@@ -57,10 +60,11 @@ export function detectLanguage(text: string): 'persian' | 'arabic' | 'english' |
   const chars = text.replace(/\s/g, '');
   if (chars.length === 0) return 'mixed';
 
-  let persianCount = countPersianChars(chars);
-  let englishCount = (chars.match(/[a-zA-Z]/g) || []).length;
+  const persianCount = countPersianChars(chars);
+  const englishCount = (chars.match(/[a-zA-Z]/g) || []).length;
   // Specific Arabic characters not part of standard Persian alphabet
-  let arabicOnlyCount = (chars.match(/[يىكَة\u064B-\u064D]/g) || []).length;
+  // eslint-disable-next-line no-misleading-character-class
+  const arabicOnlyCount = (chars.match(/[يىك\u0629\u064B-\u064D]/g) || []).length;
 
   const total = chars.length;
   
