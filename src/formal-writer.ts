@@ -20,6 +20,7 @@ import {
   LETTER_TEMPLATES,
   ZWNJ
 } from './constants';
+import { PersianColloquialEngine } from './colloquial-engine';
 
 const B_PRE = '(?<=^|[\\s،؛.!?؟()«»"\'\\[\\]{}:–—-])';
 const B_POST = '(?=[\\s،؛.!?؟()«»"\'\\[\\]{}:–—-]|$)' ;
@@ -331,6 +332,27 @@ export function detectInformalWords(text: string, options: FormalityOptions = {}
     }
   }
 
+  // ۳. بررسی هوشمند موتور صرف افعال، واج‌شناسی و خطاهای عامیانه
+  const colloquialResult = PersianColloquialEngine.convertToFormal(text);
+  for (const d of colloquialResult.details) {
+    const pos = text.indexOf(d.original);
+    const end = pos !== -1 ? pos + d.original.length : 0;
+    const overlaps = pos !== -1 && matchedSpans.some(span =>
+      (pos >= span.start && pos < span.end) || (end > span.start && end <= span.end)
+    );
+
+    if (pos !== -1 && !overlaps && d.original !== d.replacement) {
+      matchedSpans.push({ start: pos, end });
+      issues.push({
+        word: d.original,
+        suggestion: d.replacement,
+        position: pos,
+        type: d.category === 'verb' ? 'colloquial_verb' : 'informal_word',
+        severity: d.category === 'verb' ? 'high' : 'medium'
+      });
+    }
+  }
+
   return issues.sort((a, b) => a.position - b.position);
 }
 
@@ -422,9 +444,11 @@ export function checkFormality(text: string, options: FormalityOptions = {}): Fo
 export function toFormal(text: string, options: FormalityOptions = {}): string {
   if (!text) return '';
   const { mode = 'administrative' } = options;
-  let result = text;
+
+  // ۱. تبدیل زبان‌شناختی جامع محاوره و ساختارهای صرفی افعال، واج‌شناسی و مکاتبات اداری
+  let result = PersianColloquialEngine.convertToFormal(text).convertedText;
   
-  // ۱. اعمال قواعد بافتاری و چندکلمه‌ای
+  // ۲. اعمال قواعد بافتاری و چندکلمه‌ای
   for (const rule of CONTEXTUAL_RULES) {
     if (rule.modes && !rule.modes.includes(mode)) {
       continue;
@@ -433,7 +457,7 @@ export function toFormal(text: string, options: FormalityOptions = {}): string {
     result = result.replace(regex, rule.replace);
   }
 
-  // ۲. اعمال جایگزینی واژه‌های غیررسمی منفرد
+  // ۳. اعمال جایگزینی واژه‌های غیررسمی منفرد
   const sortedEntries = Object.entries(INFORMAL_TO_FORMAL_MAP).sort(
     (a, b) => b[0].length - a[0].length
   );
@@ -444,7 +468,7 @@ export function toFormal(text: string, options: FormalityOptions = {}): string {
     result = result.replace(regex, formal);
   }
   
-  // ۳. اصلاح نیم‌فاصله در پیشوندهای فعلی (مانند 'می ' -> 'می‌')
+  // ۴. اصلاح نیم‌فاصله در پیشوندهای فعلی (مانند 'می ' -> 'می‌')
   result = result.replace(/(^|\s)(می|نمی)\s+([آ-ی]+)/gu, `$1$2${ZWNJ}$3`);
   
   return result;

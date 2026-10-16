@@ -173,6 +173,21 @@ export {
   rewriteWithLLM,
 } from './llm-adapter';
 
+// ─── Colloquial & Administrative Linguistic Engine ───────────────────
+export {
+  PersianColloquialEngine,
+  COMPOUND_WORD_SPLIT_MAP,
+} from './colloquial-engine';
+export type { FormalityConversionResult } from './colloquial-engine';
+
+// ─── Trie & Fast Lexicon Search ──────────────────────────────────────
+export { PersianTrie } from './trie';
+export type { TrieNode, TrieSearchResult } from './trie';
+
+// ─── Contextual Homophone Spell Checker ──────────────────────────────
+export { checkContextualSpelling } from './contextual-spell';
+export type { ContextualSpellIssue } from './contextual-spell';
+
 // ─── Document Scanner & Diff (CLI 2.0) ──────────────────────────────
 export {
   scanText,

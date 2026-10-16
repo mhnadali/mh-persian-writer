@@ -18,9 +18,16 @@ import {
 import { tokenizeWords } from './tokenizer';
 import { isVerb } from './stemmer';
 import { fixArabicCharacters } from './normalizer';
+import { PersianTrie } from './trie';
+import { checkContextualSpelling } from './contextual-spell';
+import { COMPOUND_WORD_SPLIT_MAP } from './colloquial-engine';
 
 /** مجموعه کلمات پایه برای جستجوی فوق‌سریع O(1) */
 const baseDictionarySet = new Set<string>(BASE_PERSIAN_DICTIONARY);
+
+/** درخت پیشوندی سراسری جهت جستجوی آنی فازی دامرو-لون‌اشتاین */
+const trieInstance = new PersianTrie();
+trieInstance.insertBatch(BASE_PERSIAN_DICTIONARY);
 
 /** پسوندهای اشتقاقی و صرفی زبان فارسی (مرتب‌شده بر اساس طول جهت تفکیک حریصانه) */
 const VALID_SUFFIXES = [
@@ -311,7 +318,12 @@ export function suggestCorrections(
   const target = fixArabicCharacters(word.trim()).replace(new RegExp(`^${ZWNJ}+|${ZWNJ}+$`, 'g'), '');
   if (!target || target.length <= 1) return [];
 
-  // ۱. بررسی در جدول خطاهای شناخته‌شده (Exact match for known typos)
+  // ۱. بررسی در نگاشت کلمات مرکب چسبیده
+  if (COMPOUND_WORD_SPLIT_MAP[target]) {
+    return [COMPOUND_WORD_SPLIT_MAP[target]];
+  }
+
+  // ۲. بررسی در جدول خطاهای شناخته‌شده (Exact match for known typos)
   if (COMMON_TYPOS[target]) {
     return [COMMON_TYPOS[target]];
   }
@@ -321,13 +333,13 @@ export function suggestCorrections(
     ...customDictionary,
   ]);
 
-  // ۲. تولید پیشنهادات فوق‌دقیق بر پایه حروف هم‌آوا (ص/س، ض/ز/ظ/ذ، ت/ط، ق/غ، ع/ء)
+  // ۳. تولید پیشنهادات فوق‌دقیق بر پایه حروف هم‌آوا (ص/س، ض/ز/ظ/ذ، ت/ط، ق/غ، ع/ء)
   const homophoneCandidates = generateHomophoneCandidates(target, combinedDictSet);
   if (homophoneCandidates.length > 0) {
     return homophoneCandidates.slice(0, maxSuggestions);
   }
 
-  // ۳. جستجوی فاصله ویرایشی کنترل‌شده (فقط با حداقل شباهت ۸۲٪ جهت جلوگیری از پیشنهادات نامربوط)
+  // ۴. جستجوی فازی پرسرعت روی درخت پیشوندی (Trie Fuzzy Branch-and-Bound Search)
   interface Candidate {
     word: string;
     distance: number;
@@ -335,27 +347,33 @@ export function suggestCorrections(
   }
 
   const candidates: Candidate[] = [];
+  const trieResults = trieInstance.searchFuzzy(target, Math.min(maxDistance, 1.8), useHomophones);
 
-  for (const dictWord of combinedDictSet) {
-    // تفاوت طول حداکثر ۱ کاراکتر
-    if (Math.abs(dictWord.length - target.length) > 1) {
-      continue;
+  for (const res of trieResults) {
+    if (Math.abs(res.word.length - target.length) > 1) continue;
+    const sim = calculateSimilarity(target, res.word);
+    if (sim >= 0.78) {
+      candidates.push({ word: res.word, distance: res.distance, similarity: sim });
     }
+  }
 
-    const distLimit = Math.min(maxDistance, 1.5);
-    const dist = damerauLevenshteinDistance(target, dictWord, useHomophones);
-    if (dist <= distLimit) {
-      const sim = calculateSimilarity(target, dictWord);
-      // فیلتر سخت‌گیرانه برای عدم تولید هذیان و پیشنهادات تصادفی
-      if (sim >= 0.82) {
-        candidates.push({ word: dictWord, distance: dist, similarity: sim });
+  // در صورت داشتن واژه‌نامه سفارشی، کلمات سفارشی را نیز بررسی کن
+  if (customDictionary && customDictionary.length > 0) {
+    for (const customWord of customDictionary) {
+      if (Math.abs(customWord.length - target.length) > 1) continue;
+      const dist = damerauLevenshteinDistance(target, customWord, useHomophones);
+      if (dist <= 1.8) {
+        const sim = calculateSimilarity(target, customWord);
+        if (sim >= 0.78 && !candidates.some(c => c.word === customWord)) {
+          candidates.push({ word: customWord, distance: dist, similarity: sim });
+        }
       }
     }
   }
 
-  // مرتب‌سازی بر اساس فاصله کمتر و سپس شباهت بیشتر
+  // مرتب‌سازی بر اساس کمترین فاصله ویرایشی، سپس بیشترین شباهت
   candidates.sort((a, b) => {
-    if (a.distance !== b.distance) {
+    if (Math.abs(a.distance - b.distance) > 0.001) {
       return a.distance - b.distance;
     }
     return b.similarity - a.similarity;
@@ -437,7 +455,22 @@ export function spellCheck(
 
   let corrected = text;
 
-  // ابتدا تصحیح مستقیم خطاهای مشهور
+  // ۱. بررسی خطاهای بافتاری کلمات هم‌آوا (Contextual Homophone Checking)
+  const contextualIssues = checkContextualSpelling(text);
+  for (const cIssue of contextualIssues) {
+    issues.push({
+      word: cIssue.originalWord,
+      position: cIssue.position,
+      suggestions: [cIssue.suggestedWord],
+      similarity: 0.99,
+      errorType: 'homophone',
+    });
+    const escapedWord = cIssue.originalWord.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const wordRegex = new RegExp(`(?<=^|[\\s،؛.!?؟()«»"'\\[\\]{}:–—-])${escapedWord}(?=[\\s،؛.!?؟()«»"'\\[\\]{}:–—-]|$)`, 'gu');
+    corrected = corrected.replace(wordRegex, cIssue.suggestedWord);
+  }
+
+  // ۲. تصحیح مستقیم خطاهای مشهور
   corrected = fixCommonTypos(corrected);
 
   let searchOffset = 0;
