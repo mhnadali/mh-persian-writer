@@ -7,10 +7,9 @@
  */
 
 document.addEventListener('DOMContentLoaded', () => {
-  const Writer = window.MHPersianWriter;
+  const Writer = window.MHPersianWriter || globalThis.MHPersianWriter || self.MHPersianWriter;
   if (!Writer) {
     console.error('[M.H. Writer] MHPersianWriter core bundle not loaded.');
-    return;
   }
 
   // المان‌های DOM
@@ -44,7 +43,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let currentTone = 'administrative';
 
   function pushHistory(text) {
-    if (!text) return;
+    if (text === undefined || text === null) return;
     if (undoStack.length === 0 || undoStack[undoStack.length - 1] !== text) {
       undoStack.push(text);
       if (undoStack.length > 25) undoStack.shift();
@@ -99,46 +98,55 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // به‌روزرسانی آنی آمار و شاخص‌های کیفی متن
   function updateStats() {
+    if (!inputEl) return;
     const text = inputEl.value;
     const len = text.length;
 
-    statChars.textContent = `${Writer.toPersianDigits(len.toString())} کاراکتر`;
+    const toPersianDigitsFn = Writer?.toPersianDigits || ((s) => s);
+
+    if (statChars) {
+      statChars.textContent = `${toPersianDigitsFn(len.toString())} کاراکتر`;
+    }
 
     if (!text.trim()) {
-      statWords.textContent = '۰';
-      statScore.textContent = '۱۰۰٪';
-      statTime.textContent = '۰ ثانیه';
-      formalityText.textContent = getToneLabel(currentTone);
-      formalityIndicator.className = 'formality-badge';
+      if (statWords) statWords.textContent = '۰';
+      if (statScore) statScore.textContent = '۱۰۰٪';
+      if (statTime) statTime.textContent = '۰ ثانیه';
+      if (formalityText) formalityText.textContent = getToneLabel(currentTone);
+      if (formalityIndicator) formalityIndicator.className = 'formality-badge';
       return;
     }
 
-    const words = Writer.countWords(text);
-    statWords.textContent = Writer.toPersianDigits(words.toString());
+    const words = Writer ? Writer.countWords(text) : (text.match(/[\w\u0600-\u06FF]+/g) || []).length;
+    if (statWords) statWords.textContent = toPersianDigitsFn(words.toString());
 
     // تخمین زمان خواندن (میانگین سرعت خواندن فارسی: ۲۰۰ واژه در دقیقه)
     const seconds = Math.max(1, Math.round((words / 200) * 60));
-    if (seconds < 60) {
-      statTime.textContent = `~${Writer.toPersianDigits(seconds.toString())} ثانیه`;
-    } else {
-      const minutes = Math.ceil(seconds / 60);
-      statTime.textContent = `~${Writer.toPersianDigits(minutes.toString())} دقیقه`;
+    if (statTime) {
+      if (seconds < 60) {
+        statTime.textContent = `~${toPersianDigitsFn(seconds.toString())} ثانیه`;
+      } else {
+        const minutes = Math.ceil(seconds / 60);
+        statTime.textContent = `~${toPersianDigitsFn(minutes.toString())} دقیقه`;
+      }
     }
 
     // تحلیل رسمیت متن بر اساس لحن انتخابی
-    const formality = Writer.checkFormality(text, { mode: currentTone });
-    const score = formality.score;
-    statScore.textContent = `${Writer.toPersianDigits(score.toString())}٪`;
+    if (Writer && statScore && formalityIndicator && formalityText) {
+      const formality = Writer.checkFormality(text, { mode: currentTone });
+      const score = formality.score;
+      statScore.textContent = `${toPersianDigitsFn(score.toString())}٪`;
 
-    formalityIndicator.className = 'formality-badge';
-    if (score >= 80) {
-      formalityText.textContent = `${getToneLabel(currentTone)} (رسمی)`;
-    } else if (score >= 50) {
-      formalityIndicator.classList.add('warning');
-      formalityText.textContent = 'نیمه‌رسمی';
-    } else {
-      formalityIndicator.classList.add('danger');
-      formalityText.textContent = 'غیررسمی / محاوره';
+      formalityIndicator.className = 'formality-badge';
+      if (score >= 80) {
+        formalityText.textContent = `${getToneLabel(currentTone)} (رسمی)`;
+      } else if (score >= 50) {
+        formalityIndicator.classList.add('warning');
+        formalityText.textContent = 'نیمه‌رسمی';
+      } else {
+        formalityIndicator.classList.add('danger');
+        formalityText.textContent = 'غیررسمی / محاوره';
+      }
     }
   }
 
@@ -155,124 +163,166 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  inputEl.addEventListener('input', updateStats);
+  if (inputEl) {
+    inputEl.addEventListener('input', updateStats);
 
-  // میانبرهای صفحه کلید درون ویرایشگر پاپ‌آپ
-  inputEl.addEventListener('keydown', (e) => {
-    // واگرد تغییرات (Ctrl+Z / Cmd+Z)
-    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
-      if (undoStack.length > 0) {
-        e.preventDefault();
-        performUndo();
+    // میانبرهای صفحه کلید درون ویرایشگر پاپ‌آپ
+    inputEl.addEventListener('keydown', (e) => {
+      // واگرد تغییرات (Ctrl+Z / Cmd+Z)
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
+        if (undoStack.length > 0) {
+          e.preventDefault();
+          performUndo();
+        }
       }
-    }
-    // پاک‌سازی و نیم‌فاصله‌گذاری فوق‌سریع (Ctrl+Enter / Cmd+Enter)
-    else if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
-      e.preventDefault();
-      btnNormalize.click();
-    }
-  });
+      // پاک‌سازی و نیم‌فاصله‌گذاری فوق‌سریع (Ctrl+Enter / Cmd+Enter)
+      else if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+        e.preventDefault();
+        if (btnNormalize) btnNormalize.click();
+      }
+    });
+  }
 
   // پاک‌سازی کادر
-  btnClear.addEventListener('click', () => {
-    if (!inputEl.value) return;
-    pushHistory(inputEl.value);
-    inputEl.value = '';
-    updateStats();
-    resultsPanel.classList.add('hidden');
-    inputEl.focus();
-  });
+  if (btnClear) {
+    btnClear.addEventListener('click', () => {
+      if (!inputEl || !inputEl.value) return;
+      pushHistory(inputEl.value);
+      inputEl.value = '';
+      updateStats();
+      if (resultsPanel) resultsPanel.classList.add('hidden');
+      inputEl.focus();
+    });
+  }
 
-  // الصاق از کلیپ‌بورد
-  btnPaste.addEventListener('click', async () => {
-    try {
-      const text = await navigator.clipboard.readText();
-      if (text) {
+  // الصاق دستی از کلیپ‌بورد با پشتیبانی از چند شیوه ایمن
+  if (btnPaste) {
+    btnPaste.addEventListener('click', async () => {
+      let text = '';
+      try {
+        if (navigator.clipboard && navigator.clipboard.readText) {
+          text = await navigator.clipboard.readText();
+        }
+      } catch (err) {
+        console.warn('Clipboard readText failed:', err);
+      }
+
+      if (text && text.trim()) {
         pushHistory(inputEl.value);
         inputEl.value = text;
         updateStats();
-        showNotification('متن از حافظه کلیپ‌بورد الصاق شد.');
+        showNotification('متن از حافظه کلیپ‌بورد الصاق شد 📋');
+        inputEl.focus();
+      } else {
+        // روش جایگزین با فوکوس و دستور paste
+        inputEl.focus();
+        document.execCommand('paste');
+        if (inputEl.value && inputEl.value.trim()) {
+          updateStats();
+          showNotification('متن الصاق شد 📋');
+        } else {
+          showNotification('کلیپ‌بورد خالی است یا دسترسی به آن امکان‌پذیر نیست.', 'warning');
+        }
       }
-    } catch (e) {
-      inputEl.focus();
-    }
-  });
+    });
+  }
 
   // ۱. پاک‌سازی و نیم‌فاصله‌گذاری (Normalize)
-  btnNormalize.addEventListener('click', () => {
-    const text = inputEl.value;
-    if (!text.trim()) {
-      showNotification('لطفاً ابتدا متنی را وارد نمایید.', 'warning');
-      return;
-    }
+  if (btnNormalize) {
+    btnNormalize.addEventListener('click', () => {
+      if (!Writer) {
+        showNotification('موتور پردازش ام‌اچ در حال آماده‌سازی است...', 'warning');
+        return;
+      }
+      const text = inputEl.value;
+      if (!text.trim()) {
+        showNotification('لطفاً ابتدا متنی را وارد نمایید.', 'warning');
+        return;
+      }
 
-    pushHistory(text);
-    inputEl.value = Writer.normalize(text, {
-      persianCharacters: true,
-      persianDigits: true,
-      fixSpacing: true,
-      removeDiacritics: true,
-      fixPunctuation: true,
+      pushHistory(text);
+      inputEl.value = Writer.normalize(text, {
+        persianCharacters: true,
+        persianDigits: true,
+        fixSpacing: true,
+        removeDiacritics: true,
+        fixPunctuation: true,
+      });
+      updateStats();
+      showNotification('متن با موفقیت پاک‌سازی، یکدست و نیم‌فاصله‌گذاری شد ✨');
     });
-    updateStats();
-    showNotification('متن با موفقیت پاک‌سازی، یکدست و نیم‌فاصله‌گذاری شد ✨');
-  });
+  }
 
   // ۲. تبدیل به نگارش رسمی و اداری (Formalize) بر اساس لحن انتخابی
-  btnFormalize.addEventListener('click', () => {
-    const text = inputEl.value;
-    if (!text.trim()) {
-      showNotification('لطفاً ابتدا متنی را وارد نمایید.', 'warning');
-      return;
-    }
+  if (btnFormalize) {
+    btnFormalize.addEventListener('click', () => {
+      if (!Writer) {
+        showNotification('موتور پردازش ام‌اچ در حال آماده‌سازی است...', 'warning');
+        return;
+      }
+      const text = inputEl.value;
+      if (!text.trim()) {
+        showNotification('لطفاً ابتدا متنی را وارد نمایید.', 'warning');
+        return;
+      }
 
-    pushHistory(text);
-    const check = Writer.checkFormality(text, { mode: currentTone });
-    inputEl.value = Writer.toFormal(text, { mode: currentTone });
-    updateStats();
+      pushHistory(text);
+      const check = Writer.checkFormality(text, { mode: currentTone });
+      inputEl.value = Writer.toFormal(text, { mode: currentTone });
+      updateStats();
 
-    if (check.suggestions && check.suggestions.length > 0) {
-      btnApplyAll.classList.add('hidden');
-      panelTitle.textContent = `پیشنهادات بهبود لحن (${Writer.toPersianDigits(check.suggestions.length.toString())} مورد)`;
-      panelBody.innerHTML = `
-        <div style="display: flex; flex-direction: column; gap: 6px;">
-          ${check.suggestions.map(s => `
-            <div class="suggestion-card">
-              <span class="issue-label">💡 ${s}</span>
+      if (check.suggestions && check.suggestions.length > 0) {
+        if (btnApplyAll) btnApplyAll.classList.add('hidden');
+        if (panelTitle) panelTitle.textContent = `پیشنهادات بهبود لحن (${Writer.toPersianDigits(check.suggestions.length.toString())} مورد)`;
+        if (panelBody) {
+          panelBody.innerHTML = `
+            <div style="display: flex; flex-direction: column; gap: 6px;">
+              ${check.suggestions.map(s => `
+                <div class="suggestion-card">
+                  <span class="issue-label">💡 ${s}</span>
+                </div>
+              `).join('')}
             </div>
-          `).join('')}
-        </div>
-      `;
-      resultsPanel.classList.remove('hidden');
-    } else {
-      showNotification(`متن با موفقیت به ${getToneLabel(currentTone)} تبدیل شد 👔`);
-    }
-  });
+          `;
+        }
+        if (resultsPanel) resultsPanel.classList.remove('hidden');
+      } else {
+        showNotification(`متن با موفقیت به ${getToneLabel(currentTone)} تبدیل شد 👔`);
+      }
+    });
+  }
 
   // ۳. غلط‌یاب هوشمند املایی (Spell Check) با واژه‌نامه اختصاصی کاربر
-  btnSpell.addEventListener('click', () => {
-    const text = inputEl.value;
-    if (!text.trim()) {
-      showNotification('لطفاً ابتدا متنی را وارد نمایید.', 'warning');
-      return;
-    }
+  if (btnSpell) {
+    btnSpell.addEventListener('click', () => {
+      if (!Writer) {
+        showNotification('موتور پردازش ام‌اچ در حال آماده‌سازی است...', 'warning');
+        return;
+      }
+      const text = inputEl.value;
+      if (!text.trim()) {
+        showNotification('لطفاً ابتدا متنی را وارد نمایید.', 'warning');
+        return;
+      }
 
-    const result = Writer.spellCheck(text, { customDictionary });
-    currentSpellIssues = result.issues || [];
+      const result = Writer.spellCheck(text, { customDictionary });
+      currentSpellIssues = result.issues || [];
 
-    if (currentSpellIssues.length === 0) {
-      showNotification('تبریک! هیچ خطای املایی در متن یافت نشد 👏');
-      return;
-    }
+      if (currentSpellIssues.length === 0) {
+        showNotification('تبریک! هیچ خطای املایی در متن یافت نشد 👏');
+        return;
+      }
 
-    panelTitle.textContent = `اشتباهات املایی یافت‌شده (${Writer.toPersianDigits(currentSpellIssues.length.toString())} مورد)`;
-    btnApplyAll.classList.remove('hidden');
+      if (panelTitle) panelTitle.textContent = `اشتباهات املایی یافت‌شده (${Writer.toPersianDigits(currentSpellIssues.length.toString())} مورد)`;
+      if (btnApplyAll) btnApplyAll.classList.remove('hidden');
 
-    renderSpellIssues();
-    resultsPanel.classList.remove('hidden');
-  });
+      renderSpellIssues();
+      if (resultsPanel) resultsPanel.classList.remove('hidden');
+    });
+  }
 
   function renderSpellIssues() {
+    if (!panelBody) return;
     if (currentSpellIssues.length === 0) {
       showNotification('تمام اشتباهات املایی اصلاح گردیدند ✨');
       return;
@@ -348,14 +398,17 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // اعمال خودکار همه پیشنهادات املایی
-  btnApplyAll.addEventListener('click', () => {
-    pushHistory(inputEl.value);
-    const result = Writer.spellCheck(inputEl.value, { customDictionary });
-    inputEl.value = result.correctedText;
-    updateStats();
-    currentSpellIssues = [];
-    showNotification('تمام اشتباهات املایی با موفقیت تصحیح شدند ✨');
-  });
+  if (btnApplyAll) {
+    btnApplyAll.addEventListener('click', () => {
+      if (!Writer) return;
+      pushHistory(inputEl.value);
+      const result = Writer.spellCheck(inputEl.value, { customDictionary });
+      inputEl.value = result.correctedText;
+      updateStats();
+      currentSpellIssues = [];
+      showNotification('تمام اشتباهات املایی با موفقیت تصحیح شدند ✨');
+    });
+  }
 
   // ۴. بازنویسی هوشمند پاراگراف با هوش مصنوعی (AI Rewriter)
   const btnAiRewrite = document.getElementById('btn-ai-rewrite');
@@ -363,6 +416,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
   if (btnAiRewrite) {
     btnAiRewrite.addEventListener('click', async () => {
+      if (!Writer) {
+        showNotification('موتور هوش مصنوعی در حال بارگذاری است...', 'warning');
+        return;
+      }
       const text = inputEl.value;
       if (!text.trim()) {
         showNotification('لطفاً ابتدا متنی را برای بازنویسی وارد نمایید.', 'warning');
@@ -403,51 +460,109 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // ۵. کپی در کلیپ‌بورد با بازخورد پویا
-  btnCopy.addEventListener('click', async () => {
-    const text = inputEl.value;
-    if (!text.trim()) {
-      showNotification('متنی برای کپی وجود ندارد.', 'warning');
-      return;
-    }
+  if (btnCopy) {
+    btnCopy.addEventListener('click', async () => {
+      const text = inputEl.value;
+      if (!text.trim()) {
+        showNotification('متنی برای کپی وجود ندارد.', 'warning');
+        return;
+      }
 
-    try {
-      await navigator.clipboard.writeText(text);
-      copySubText.textContent = 'کپی شد! ✓';
-      copySubText.style.color = '#34d399';
-      btnCopy.classList.add('copied');
+      let copied = false;
+      try {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          await navigator.clipboard.writeText(text);
+          copied = true;
+        }
+      } catch (err) {
+        console.warn('Clipboard writeText failed:', err);
+      }
 
-      setTimeout(() => {
-        copySubText.textContent = 'آماده انتقال';
-        copySubText.style.color = '';
-        btnCopy.classList.remove('copied');
-      }, 1800);
-    } catch (err) {
-      console.error('Copy failed', err);
-    }
-  });
+      if (!copied) {
+        inputEl.select();
+        copied = document.execCommand('copy');
+      }
+
+      if (copied) {
+        if (copySubText) {
+          copySubText.textContent = 'کپی شد! ✓';
+          copySubText.style.color = '#34d399';
+        }
+        btnCopy.classList.add('copied');
+
+        setTimeout(() => {
+          if (copySubText) {
+            copySubText.textContent = 'آماده انتقال';
+            copySubText.style.color = '';
+          }
+          btnCopy.classList.remove('copied');
+        }, 1800);
+        showNotification('متن با موفقیت در کلیپ‌بورد کپی شد 📋');
+      }
+    });
+  }
 
   function showNotification(msg, type = 'info') {
-    btnApplyAll.classList.add('hidden');
+    if (!resultsPanel || !panelTitle || !panelBody) return;
+    if (btnApplyAll) btnApplyAll.classList.add('hidden');
     panelTitle.textContent = 'وضعیت عملیات';
     const color = type === 'warning' ? '#fbbf24' : '#38bdf8';
     panelBody.innerHTML = `<div class="panel-toast-msg" style="color: ${color};"><span>✨</span> <span>${msg}</span></div>`;
     resultsPanel.classList.remove('hidden');
   }
 
-  btnClosePanel.addEventListener('click', () => {
-    resultsPanel.classList.add('hidden');
-  });
+  if (btnClosePanel) {
+    btnClosePanel.addEventListener('click', () => {
+      if (resultsPanel) resultsPanel.classList.add('hidden');
+    });
+  }
 
-  // تلاش برای خواندن متن انتخاب‌شده در تب جاری کاربر هنگام باز شدن پاپ‌آپ
-  chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-    if (tabs[0] && tabs[0].id) {
-      chrome.tabs.sendMessage(tabs[0].id, { type: 'AMACH_GET_SELECTION' }, (response) => {
-        if (chrome.runtime.lastError) return;
+  // بارگذاری هوشمند متن اولیه (از تب فعال یا اتوماتیک از کلیپ‌بورد)
+  async function loadInitialText() {
+    // دریافت تنظیمات
+    const stored = await new Promise((resolve) => {
+      chrome.storage.sync.get(['amach_settings'], (res) => resolve(res.amach_settings || {}));
+    });
+    const allowAutoClipboard = stored.autoClipboard ?? true;
+
+    // ۱. بررسی انتخاب متن در تب جاری
+    let selectionFound = false;
+    try {
+      const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+      if (tabs && tabs[0] && tabs[0].id) {
+        const response = await new Promise((resolve) => {
+          chrome.tabs.sendMessage(tabs[0].id, { type: 'AMACH_GET_SELECTION' }, (res) => {
+            if (chrome.runtime.lastError) resolve(null);
+            else resolve(res);
+          });
+        });
         if (response && response.selection && response.selection.trim()) {
           inputEl.value = response.selection.trim();
           updateStats();
+          selectionFound = true;
         }
-      });
+      }
+    } catch {
+      // نادیده گرفتن خطای ارتباط با تب
     }
-  });
+
+    // ۲. در صورتی که متنی در تب انتخاب نشده، خواندن خودکار کلیپ‌بورد
+    if (!selectionFound && allowAutoClipboard && (!inputEl.value || !inputEl.value.trim())) {
+      try {
+        if (navigator.clipboard && navigator.clipboard.readText) {
+          const clipText = await navigator.clipboard.readText();
+          if (clipText && clipText.trim()) {
+            inputEl.value = clipText.trim();
+            updateStats();
+            showNotification('متن به صورت خودکار از کلیپ‌بورد بارگذاری شد 📋', 'info');
+          }
+        }
+      } catch (err) {
+        console.warn('[M.H. Writer] Auto clipboard read failed:', err);
+      }
+    }
+  }
+
+  // اجرای بارگذاری اولیه
+  loadInitialText();
 });

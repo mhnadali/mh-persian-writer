@@ -53,6 +53,7 @@ chrome.runtime.onInstalled.addListener(() => {
           persianDigits: true,
           floatingButton: true,
           realtimeAssistant: true,
+          autoClipboard: true,
           formalityTone: 'administrative'
         }
       });

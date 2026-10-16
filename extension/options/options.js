@@ -11,12 +11,15 @@ document.addEventListener('DOMContentLoaded', () => {
   // المان‌های تنظیمات
   const optRealtime = document.getElementById('opt-realtime');
   const optFloating = document.getElementById('opt-floating');
+  const optClipboard = document.getElementById('opt-clipboard');
   const optTone = document.getElementById('opt-tone');
   const optDigits = document.getElementById('opt-digits');
   const optSpell = document.getElementById('opt-spell');
   const optZwnj = document.getElementById('opt-zwnj');
   const btnSave = document.getElementById('btn-save');
   const saveMsg = document.getElementById('save-msg');
+
+  let customDictionary = [];
 
   // المان‌های واژه‌نامه اختصاصی
   const dictWordInput = document.getElementById('dict-word-input');
@@ -42,6 +45,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const s = result.amach_settings;
       if (optRealtime) optRealtime.checked = s.realtimeAssistant ?? true;
       if (optFloating) optFloating.checked = s.floatingButton ?? true;
+      if (optClipboard) optClipboard.checked = s.autoClipboard ?? true;
       if (optTone && s.formalityTone) optTone.value = s.formalityTone;
       if (optDigits) optDigits.checked = s.persianDigits ?? true;
       if (optSpell) optSpell.checked = s.spellCheck ?? true;
@@ -173,6 +177,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const newSettings = {
         realtimeAssistant: optRealtime ? optRealtime.checked : true,
         floatingButton: optFloating ? optFloating.checked : true,
+        autoClipboard: optClipboard ? optClipboard.checked : true,
         persianDigits: optDigits ? optDigits.checked : true,
         spellCheck: optSpell ? optSpell.checked : true,
         autoHalfSpace: optZwnj ? optZwnj.checked : true,

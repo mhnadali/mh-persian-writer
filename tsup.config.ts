@@ -5,6 +5,7 @@ export default defineConfig([
   {
     entry: {
       index: 'src/index.ts',
+      browser: 'src/browser.ts',
       normalizer: 'src/normalizer.ts',
       tokenizer: 'src/tokenizer.ts',
       'formal-writer': 'src/formal-writer.ts',
@@ -16,6 +17,7 @@ export default defineConfig([
       jalali: 'src/jalali.ts',
       'document-builder': 'src/document-builder.ts',
       'document-scanner': 'src/document-scanner.ts',
+      'document-scanner-core': 'src/document-scanner-core.ts',
       'llm-adapter': 'src/llm-adapter.ts',
       cli: 'src/cli.ts',
     },
@@ -28,10 +30,10 @@ export default defineConfig([
     target: 'es2022',
     outDir: 'dist',
   },
-  // Chrome Extension Standalone IIFE Bundle
+  // Chrome Extension Standalone IIFE Bundle (Browser-pure without Node dependencies)
   {
     entry: {
-      'core-bundle': 'src/index.ts',
+      'core-bundle': 'src/browser.ts',
     },
     format: ['iife'],
     globalName: 'MHPersianWriter',
@@ -40,5 +42,8 @@ export default defineConfig([
     minify: true,
     target: 'es2022',
     outDir: 'extension/scripts',
+    footer: {
+      js: 'if (typeof window !== "undefined") { window.MHPersianWriter = MHPersianWriter; } if (typeof globalThis !== "undefined") { globalThis.MHPersianWriter = MHPersianWriter; } if (typeof self !== "undefined") { self.MHPersianWriter = MHPersianWriter; }',
+    },
   },
 ]);
