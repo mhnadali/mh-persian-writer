@@ -199,6 +199,10 @@
           <span>⚡</span>
           <span>اصلاح خطاها</span>
         </button>
+        <button type="button" class="amach-popover-btn ai" id="amach-btn-ai-field" title="بازنویسی هوشمند پاراگراف با هوش مصنوعی (Gemini / Ollama / OpenAI)">
+          <span>🤖</span>
+          <span>هوش مصنوعی</span>
+        </button>
       </div>
       <div class="amach-popover-body" id="amach-popover-body"></div>
     `;
@@ -252,6 +256,37 @@
       setFieldText(activeElement, res.correctedText);
       checkActiveField(activeElement);
       showToastNotification('تمام خطاهای املایی تصحیح شدند ✨');
+    });
+
+    // دکمه بازنویسی هوشمند پاراگراف با هوش مصنوعی
+    popover.querySelector('#amach-btn-ai-field').addEventListener('click', async (e) => {
+      e.stopPropagation();
+      if (!activeElement) return;
+      const original = getFieldText(activeElement);
+      if (!original || !original.trim()) {
+        showToastNotification('متنی برای بازنویسی وجود ندارد.');
+        return;
+      }
+
+      showToastNotification('🤖 در حال بازنویسی پاراگراف با هوش مصنوعی...');
+      try {
+        const storage = await new Promise(r => chrome.storage.sync.get(['amach_ai_settings'], r));
+        const ai = storage.amach_ai_settings || { provider: 'ollama', model: 'qwen2.5:7b' };
+        const res = await Writer.rewriteWithLLM(original, {
+          targetTone: settings.formalityTone || 'administrative',
+          provider: {
+            type: ai.provider || 'ollama',
+            apiKey: ai.apiKey,
+            model: ai.model,
+            endpoint: ai.endpoint,
+          },
+        });
+        setFieldText(activeElement, res.finalText);
+        checkActiveField(activeElement);
+        showToastNotification('متن با هوش مصنوعی بازنویسی و پیراسته شد ✨');
+      } catch (err) {
+        showToastNotification(`خطا در هوش مصنوعی: ${err.message || 'عدم اتصال'}`);
+      }
     });
 
     quickPopover = popover;
@@ -373,11 +408,20 @@
     showToastNotification(`واژه «${word}» به واژه‌نامه شخصی اضافه شد 📚`);
   }
 
-  // جایگزینی کلمه واحد در متن فیلد
+  function escapeRegex(str) {
+    return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  }
+
+  function createPersianWordRegex(word) {
+    const escaped = escapeRegex(word);
+    return new RegExp(`(?<=^|[\\s،؛.!?؟()«»"'\\[\\]{}:–—-])${escaped}(?=[\\s،؛.!?؟()«»"'\\[\\]{}:–—-]|$)`, 'gu');
+  }
+
+  // جایگزینی کلمه واحد در متن فیلد با تشخیص دقیق مرز واژگان فارسی (نه \\b اسکی)
   function replaceWordInField(el, oldWord, newWord) {
     if (!el) return;
     const current = getFieldText(el);
-    const regex = new RegExp(`\\b${oldWord}\\b`, 'g');
+    const regex = createPersianWordRegex(oldWord);
     const updated = current.replace(regex, newWord);
     setFieldText(el, updated);
   }
@@ -398,7 +442,22 @@
       el.dispatchEvent(new Event('change', { bubbles: true }));
       return;
     }
-    // Contenteditable
+    // ویرایشگرهای محتوایی (contenteditable نظیر جیمیل، تلگرام، نوشن و...)
+    try {
+      el.focus();
+      const selection = window.getSelection();
+      const range = document.createRange();
+      range.selectNodeContents(el);
+      selection.removeAllRanges();
+      selection.addRange(range);
+      const success = document.execCommand('insertText', false, newText);
+      if (success) {
+        el.dispatchEvent(new Event('input', { bubbles: true }));
+        return;
+      }
+    } catch (e) {
+      // استفاده از fallback در صورت خطا
+    }
     el.innerText = newText;
     el.dispatchEvent(new Event('input', { bubbles: true }));
   }
@@ -495,6 +554,10 @@
         <button type="button" class="amach-action-btn" data-action="spell" title="اصلاح غلط‌های املایی">
           <span class="btn-icon">🔍</span>
           <span>غلط‌یاب</span>
+        </button>
+        <button type="button" class="amach-action-btn ai" data-action="ai" title="بازنویسی هوشمند با هوش مصنوعی">
+          <span class="btn-icon">🤖</span>
+          <span>هوش مصنوعی</span>
         </button>
       </div>
     `;
@@ -607,6 +670,28 @@
         replacement = spellResult.correctedText;
         break;
 
+      case 'ai':
+        showToastNotification('🤖 در حال بازنویسی با هوش مصنوعی...');
+        chrome.storage.sync.get(['amach_ai_settings'], async (res) => {
+          try {
+            const ai = res.amach_ai_settings || { provider: 'ollama', model: 'qwen2.5:7b' };
+            const aiRes = await Writer.rewriteWithLLM(currentSelectionText, {
+              targetTone: settings.formalityTone || 'administrative',
+              provider: {
+                type: ai.provider || 'ollama',
+                apiKey: ai.apiKey,
+                model: ai.model,
+                endpoint: ai.endpoint,
+              },
+            });
+            applyReplacement(aiRes.finalText);
+            showToastNotification('متن با هوش مصنوعی بازنویسی شد ✨');
+          } catch (err) {
+            showToastNotification(`خطا در هوش مصنوعی: ${err.message || 'عدم دسترسی'}`);
+          }
+        });
+        return;
+
       default:
         return;
     }
@@ -700,6 +785,14 @@
       processSelectedText(req.action);
       sendResponse({ status: 'ok' });
       return true;
+    }
+  });
+
+  // بستن منوهای شناور و پاپ‌اور با زدن کلید Escape
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      hideQuickPopover();
+      hideFloatingButton();
     }
   });
 

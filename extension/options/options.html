@@ -531,6 +531,11 @@
       <div class="dict-chips-container" id="dict-chips-container">
         <span class="dict-empty-note">هنوز واژه‌ای به واژه‌نامه شخصی خود اضافه نکرده‌اید.</span>
       </div>
+      <div style="display: flex; gap: 10px; margin-top: 10px;">
+        <button type="button" id="btn-export-dict" class="btn-dict-add" style="padding: 6px 14px; font-size: 11.5px; background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.14); color: #cbd5e1;">📤 دریافت خروجی (Export)</button>
+        <button type="button" id="btn-import-dict" class="btn-dict-add" style="padding: 6px 14px; font-size: 11.5px; background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.14); color: #cbd5e1;">📥 بارگذاری فایل واژه‌نامه (Import)</button>
+        <input type="file" id="dict-file-input" accept=".json,.txt" style="display: none;">
+      </div>
     </section>
 
     <!-- بخش تنظیمات موتور هیبریدی هوش مصنوعی (Hybrid AI Engine) -->
@@ -580,10 +585,12 @@
 
       <div class="save-bar">
         <button type="button" id="btn-save-ai" class="btn-save" style="background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);">ذخیره تنظیمات هوش مصنوعی</button>
+        <button type="button" id="btn-test-ai" class="btn-dict-add" style="border-color: #8b5cf6; color: #a78bfa; background: rgba(139, 92, 246, 0.15);">⚡ تست زنده اتصال</button>
         <div id="ai-save-msg" class="save-alert">
           <span>✓</span> تنظیمات هوش مصنوعی با موفقیت ثبت شد.
         </div>
       </div>
+      <div id="ai-test-result" style="display: none; margin-top: 14px; padding: 12px 16px; border-radius: 10px; font-size: 13px; background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(255, 255, 255, 0.08); line-height: 1.6;"></div>
     </section>
 
     <!-- محیط آزمون زنده (Live Playground) -->

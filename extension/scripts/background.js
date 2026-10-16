@@ -1,6 +1,6 @@
 /**
- * ویراستار فارسی اماچ - پس‌زمینه افزونه (Service Worker)
- * Amach Persian Writer - Manifest V3 Background Service Worker
+ * ویراستار فارسی ام‌اچ (M.H.) - پس‌زمینه افزونه (Service Worker)
+ * M.H. Persian Writer - Manifest V3 Background Service Worker
  *
  * @author M.H. Nadali
  */
@@ -17,21 +17,28 @@ chrome.runtime.onInstalled.addListener(() => {
     chrome.contextMenus.create({
       id: "amach_normalize",
       parentId: "amach_root",
-      title: "✨ نرمال‌سازی و تنظیم نیم‌فاصله",
+      title: "✨ پاک‌سازی و نیم‌فاصله",
       contexts: ["selection", "editable"]
     });
 
     chrome.contextMenus.create({
       id: "amach_formalize",
       parentId: "amach_root",
-      title: "👔 تبدیل به متن رسمی و اداری",
+      title: "👔 تبدیل به نگارش رسمی و اداری",
       contexts: ["selection", "editable"]
     });
 
     chrome.contextMenus.create({
       id: "amach_spell",
       parentId: "amach_root",
-      title: "🔍 بررسی و اصلاح غلط‌های املایی",
+      title: "🔍 بررسی و اصلاح اشتباهات املایی",
+      contexts: ["selection", "editable"]
+    });
+
+    chrome.contextMenus.create({
+      id: "amach_ai",
+      parentId: "amach_root",
+      title: "🤖 بازنویسی هوشمند هوش مصنوعی",
       contexts: ["selection", "editable"]
     });
   });
@@ -45,6 +52,7 @@ chrome.runtime.onInstalled.addListener(() => {
           spellCheck: true,
           persianDigits: true,
           floatingButton: true,
+          realtimeAssistant: true,
           formalityTone: 'administrative'
         }
       });
@@ -60,6 +68,7 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
   if (info.menuItemId === 'amach_normalize') action = 'normalize';
   else if (info.menuItemId === 'amach_formalize') action = 'formalize';
   else if (info.menuItemId === 'amach_spell') action = 'spell';
+  else if (info.menuItemId === 'amach_ai') action = 'ai';
 
   if (action) {
     chrome.tabs.sendMessage(tab.id, {
@@ -80,7 +89,25 @@ chrome.commands.onCommand.addListener((command) => {
         chrome.tabs.sendMessage(tabs[0].id, { type: 'AMACH_CONTEXT_ACTION', action: 'normalize' });
       } else if (command === 'formalize_selected_text') {
         chrome.tabs.sendMessage(tabs[0].id, { type: 'AMACH_CONTEXT_ACTION', action: 'formalize' });
+      } else if (command === 'spellcheck_selected_text') {
+        chrome.tabs.sendMessage(tabs[0].id, { type: 'AMACH_CONTEXT_ACTION', action: 'spell' });
       }
     }
   });
+});
+
+// هندلر پروکسی درخواست‌های هوش مصنوعی (جهت دور زدن CSP صفحات وب)
+chrome.runtime.onMessage.addListener((req, sender, sendResponse) => {
+  if (req.type === 'AMACH_BG_FETCH') {
+    const { url, options } = req;
+    fetch(url, options)
+      .then(async (res) => {
+        const text = await res.text();
+        sendResponse({ ok: res.ok, status: res.status, data: text });
+      })
+      .catch((err) => {
+        sendResponse({ ok: false, error: err.message });
+      });
+    return true; // پاسخ ناهمگام
+  }
 });

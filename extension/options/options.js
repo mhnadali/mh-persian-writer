@@ -222,4 +222,126 @@ document.addEventListener('DOMContentLoaded', () => {
       testOutput.textContent = text;
     });
   }
+
+  // تست زنده اتصال به هوش مصنوعی (Live AI Connection Test)
+  const btnTestAi = document.getElementById('btn-test-ai');
+  const aiTestResult = document.getElementById('ai-test-result');
+
+  if (btnTestAi) {
+    btnTestAi.addEventListener('click', async () => {
+      btnTestAi.textContent = '⏳ در حال اتصال...';
+      btnTestAi.disabled = true;
+      if (aiTestResult) {
+        aiTestResult.style.display = 'block';
+        aiTestResult.style.borderColor = 'rgba(56, 189, 248, 0.4)';
+        aiTestResult.style.color = '#38bdf8';
+        aiTestResult.textContent = 'در حال ارسال پیام اعتبارسنجی به مدل هوش مصنوعی...';
+      }
+
+      try {
+        const provider = aiProvider ? aiProvider.value : 'ollama';
+        const model = aiModel ? aiModel.value.trim() : 'qwen2.5:7b';
+        const endpoint = aiEndpoint ? aiEndpoint.value.trim() : '';
+        const apiKey = aiApiKey ? aiApiKey.value.trim() : '';
+
+        const res = await Writer.invokeLLMProvider(
+          'سلام، این پیام تست اتصال از افزونه ام‌اچ است. لطفاً در یک کلمه پاسخ دهید: متصل',
+          'شما دستیار ویراستاری هستید.',
+          {
+            type: provider,
+            model,
+            endpoint,
+            apiKey,
+            maxTokens: 50,
+            timeoutMs: 12000,
+          }
+        );
+
+        if (aiTestResult) {
+          aiTestResult.style.borderColor = '#10b981';
+          aiTestResult.style.color = '#34d399';
+          aiTestResult.innerHTML = `<b>✓ اتصال موفقیت‌آمیز بود!</b> پاسخ ارائه‌دهنده: <code>${res.trim()}</code>`;
+        }
+      } catch (err) {
+        if (aiTestResult) {
+          aiTestResult.style.borderColor = '#f43f5e';
+          aiTestResult.style.color = '#fb7185';
+          aiTestResult.innerHTML = `<b>✕ خطا در برقراری اتصال:</b> ${err.message || 'عدم دسترسی به سرویس'}`;
+        }
+      } finally {
+        btnTestAi.textContent = '⚡ تست زنده اتصال';
+        btnTestAi.disabled = false;
+      }
+    });
+  }
+
+  // خروجی گرفتن از واژه‌نامه شخصی (Export Custom Dictionary)
+  const btnExportDict = document.getElementById('btn-export-dict');
+  if (btnExportDict) {
+    btnExportDict.addEventListener('click', () => {
+      if (customDictionary.length === 0) {
+        alert('واژه‌نامه شخصی شما خالی است.');
+        return;
+      }
+      const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(customDictionary, null, 2));
+      const downloadAnchor = document.createElement('a');
+      downloadAnchor.setAttribute('href', dataStr);
+      downloadAnchor.setAttribute('download', 'mh-persian-writer-dict.json');
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      downloadAnchor.remove();
+    });
+  }
+
+  // بارگذاری و ادغام واژه‌نامه شخصی (Import Custom Dictionary)
+  const btnImportDict = document.getElementById('btn-import-dict');
+  const dictFileInput = document.getElementById('dict-file-input');
+
+  if (btnImportDict && dictFileInput) {
+    btnImportDict.addEventListener('click', () => {
+      dictFileInput.click();
+    });
+
+    dictFileInput.addEventListener('change', (e) => {
+      const file = e.target.files && e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        try {
+          const content = event.target.result;
+          let importedWords = [];
+
+          if (file.name.endsWith('.json')) {
+            const parsed = JSON.parse(content);
+            if (Array.isArray(parsed)) {
+              importedWords = parsed;
+            }
+          } else {
+            // خط‌به‌خط
+            importedWords = content.split(/\r?\n/).map(w => w.trim()).filter(Boolean);
+          }
+
+          let addedCount = 0;
+          importedWords.forEach(w => {
+            const clean = w.trim();
+            if (clean && !customDictionary.includes(clean)) {
+              customDictionary.push(clean);
+              addedCount++;
+            }
+          });
+
+          chrome.storage.sync.set({ amach_custom_dict: customDictionary }, () => {
+            renderCustomDictChips();
+            alert(`${addedCount} واژه جدید با موفقیت به واژه‌نامه شخصی شما اضافه شد.`);
+          });
+        } catch (err) {
+          alert('خطا در خواندن فایل واژه‌نامه. لطفاً فرمت فایل را بررسی فرمایید.');
+        } finally {
+          dictFileInput.value = '';
+        }
+      };
+      reader.readAsText(file);
+    });
+  }
 });

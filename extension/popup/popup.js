@@ -25,6 +25,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const btnPaste = document.getElementById('btn-paste');
   const btnClear = document.getElementById('btn-clear');
+  const btnUndo = document.getElementById('btn-undo');
   const btnNormalize = document.getElementById('btn-normalize');
   const btnFormalize = document.getElementById('btn-formalize');
   const btnSpell = document.getElementById('btn-spell');
@@ -37,9 +38,39 @@ document.addEventListener('DOMContentLoaded', () => {
   const btnApplyAll = document.getElementById('btn-apply-all');
   const btnClosePanel = document.getElementById('btn-close-panel');
 
+  const undoStack = [];
   let currentSpellIssues = [];
   let customDictionary = [];
   let currentTone = 'administrative';
+
+  function pushHistory(text) {
+    if (!text) return;
+    if (undoStack.length === 0 || undoStack[undoStack.length - 1] !== text) {
+      undoStack.push(text);
+      if (undoStack.length > 25) undoStack.shift();
+      if (btnUndo) {
+        btnUndo.disabled = false;
+        btnUndo.classList.remove('disabled');
+      }
+    }
+  }
+
+  function performUndo() {
+    if (undoStack.length > 0) {
+      const prev = undoStack.pop();
+      inputEl.value = prev;
+      updateStats();
+      if (undoStack.length === 0 && btnUndo) {
+        btnUndo.disabled = true;
+        btnUndo.classList.add('disabled');
+      }
+      showNotification('تغییرات به حالت قبلی بازگردانده شد ↩️');
+    }
+  }
+
+  if (btnUndo) {
+    btnUndo.addEventListener('click', performUndo);
+  }
 
   // ۱. بارگذاری تنظیمات لحن و واژه‌نامه اختصاصی از حافظه همگام‌ساز کروم
   chrome.storage.sync.get(['amach_settings', 'amach_custom_dict'], (res) => {
@@ -126,9 +157,26 @@ document.addEventListener('DOMContentLoaded', () => {
 
   inputEl.addEventListener('input', updateStats);
 
+  // میانبرهای صفحه کلید درون ویرایشگر پاپ‌آپ
+  inputEl.addEventListener('keydown', (e) => {
+    // واگرد تغییرات (Ctrl+Z / Cmd+Z)
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
+      if (undoStack.length > 0) {
+        e.preventDefault();
+        performUndo();
+      }
+    }
+    // پاک‌سازی و نیم‌فاصله‌گذاری فوق‌سریع (Ctrl+Enter / Cmd+Enter)
+    else if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+      e.preventDefault();
+      btnNormalize.click();
+    }
+  });
+
   // پاک‌سازی کادر
   btnClear.addEventListener('click', () => {
     if (!inputEl.value) return;
+    pushHistory(inputEl.value);
     inputEl.value = '';
     updateStats();
     resultsPanel.classList.add('hidden');
@@ -140,6 +188,7 @@ document.addEventListener('DOMContentLoaded', () => {
     try {
       const text = await navigator.clipboard.readText();
       if (text) {
+        pushHistory(inputEl.value);
         inputEl.value = text;
         updateStats();
         showNotification('متن از حافظه کلیپ‌بورد الصاق شد.');
@@ -157,6 +206,7 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
+    pushHistory(text);
     inputEl.value = Writer.normalize(text, {
       persianCharacters: true,
       persianDigits: true,
@@ -176,6 +226,7 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
+    pushHistory(text);
     const check = Writer.checkFormality(text, { mode: currentTone });
     inputEl.value = Writer.toFormal(text, { mode: currentTone });
     updateStats();
@@ -276,8 +327,18 @@ document.addEventListener('DOMContentLoaded', () => {
     showNotification(`واژه «${word}» با موفقیت به واژه‌نامه شخصی اضافه شد 📚`);
   }
 
+  function escapeRegex(str) {
+    return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  }
+
+  function createPersianWordRegex(word) {
+    const escaped = escapeRegex(word);
+    return new RegExp(`(?<=^|[\\s،؛.!?؟()«»"'\\[\\]{}:–—-])${escaped}(?=[\\s،؛.!?؟()«»"'\\[\\]{}:–—-]|$)`, 'gu');
+  }
+
   function applySingleCorrection(wrongWord, correctWord) {
-    const regex = new RegExp(`\\b${wrongWord}\\b`, 'g');
+    pushHistory(inputEl.value);
+    const regex = createPersianWordRegex(wrongWord);
     inputEl.value = inputEl.value.replace(regex, correctWord);
     updateStats();
 
@@ -288,6 +349,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // اعمال خودکار همه پیشنهادات املایی
   btnApplyAll.addEventListener('click', () => {
+    pushHistory(inputEl.value);
     const result = Writer.spellCheck(inputEl.value, { customDictionary });
     inputEl.value = result.correctedText;
     updateStats();
@@ -307,6 +369,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
 
+      pushHistory(text);
       showNotification('🤖 در حال بازنویسی هوشمند متن با هوش مصنوعی...', 'info');
       if (aiSubText) aiSubText.textContent = 'در حال بازنویسی...';
 

@@ -328,6 +328,30 @@
   color: #ffffff;
 }
 
+.amach-popover-btn.ai {
+  background: rgba(168, 85, 247, 0.15);
+  border: 1px solid rgba(168, 85, 247, 0.35);
+  color: #c084fc;
+}
+
+.amach-popover-btn.ai:hover {
+  background: rgba(168, 85, 247, 0.35);
+  color: #ffffff;
+  border-color: rgba(168, 85, 247, 0.6);
+}
+
+.amach-action-btn.ai {
+  background: rgba(168, 85, 247, 0.15);
+  border: 1px solid rgba(168, 85, 247, 0.35);
+  color: #c084fc;
+}
+
+.amach-action-btn.ai:hover {
+  background: rgba(168, 85, 247, 0.35);
+  color: #ffffff;
+  border-color: rgba(168, 85, 247, 0.6);
+}
+
 .amach-popover-body {
   padding: 10px 12px;
   overflow-y: auto;
