@@ -367,6 +367,8 @@ export interface LLMProviderConfig {
   temperature?: number;
   /** حداکثر توکن‌های خروجی */
   maxTokens?: number;
+  /** مهلت زمانی درخواست به میلی‌ثانیه (پیش‌فرض: ۳۰۰۰۰) */
+  timeoutMs?: number;
 }
 
 /** بسته داده آماده برای ارسال به مدل‌های زبان بزرگ (LLMs) */

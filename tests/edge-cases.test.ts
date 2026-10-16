@@ -249,4 +249,34 @@ describe('Exhaustive Edge Cases & Hardening Suite', () => {
       expect(normalized).toContain('خانه\u200Cی');
     });
   });
+
+  describe('Deep Audit Fixes & Regressions', () => {
+    it('accurately normalizes Arabic Yeh and Kaf in spell-checker verification', () => {
+      // امنيتي with Arabic Yeh U+064A
+      expect(isWordCorrect('امنيتي')).toBe(true);
+      // كمك with Arabic Kaf U+0643
+      expect(isWordCorrect('كمك')).toBe(true);
+      // اطلاعاتي with Arabic Yeh
+      expect(isWordCorrect('اطلاعاتي')).toBe(true);
+    });
+
+    it('accurately computes exact distinct positions for repeated misspelled words', () => {
+      const text = 'واژه اشتبا اول و واژه اشتبا دوم';
+      const result = spellCheck(text);
+      expect(result.issues.length).toBe(2);
+      expect(result.issues[0].word).toBe('اشتبا');
+      expect(result.issues[0].position).toBe(5);
+      expect(result.issues[1].word).toBe('اشتبا');
+      expect(result.issues[1].position).toBe(22);
+    });
+
+    it('protects base Persian lemmas from over-stemming when suffixes match without ZWNJ', () => {
+      expect(stem('سلام').stem).toBe('سلام');
+      expect(stem('پیام').stem).toBe('پیام');
+      expect(stem('حیات').stem).toBe('حیات');
+      expect(stem('داستان').stem).toBe('داستان');
+      expect(stem('امکان').stem).toBe('امکان');
+      expect(stem('زمستان').stem).toBe('زمستان');
+    });
+  });
 });

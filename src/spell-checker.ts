@@ -17,6 +17,7 @@ import {
 } from './constants';
 import { tokenizeWords } from './tokenizer';
 import { isVerb } from './stemmer';
+import { fixArabicCharacters } from './normalizer';
 
 /** مجموعه کلمات پایه برای جستجوی فوق‌سریع O(1) */
 const baseDictionarySet = new Set<string>(BASE_PERSIAN_DICTIONARY);
@@ -224,7 +225,8 @@ export function isWordCorrect(
   word: string,
   customDictionary?: string[]
 ): boolean {
-  const cleaned = word.trim().replace(new RegExp(`^${ZWNJ}|${ZWNJ}$`, 'g'), '');
+  if (!word) return true;
+  const cleaned = fixArabicCharacters(word.trim()).replace(new RegExp(`^${ZWNJ}+|${ZWNJ}+$`, 'g'), '');
   if (!cleaned || cleaned.length <= 1) return true;
 
   // ۱. عبور کلمات لاتین و انگلیسی، اعداد و علائم خاص (Google, Chrome, Lens, PDF, Gemini)
@@ -306,7 +308,7 @@ export function suggestCorrections(
     useHomophones = true,
   } = options;
 
-  const target = word.trim();
+  const target = fixArabicCharacters(word.trim()).replace(new RegExp(`^${ZWNJ}+|${ZWNJ}+$`, 'g'), '');
   if (!target || target.length <= 1) return [];
 
   // ۱. بررسی در جدول خطاهای شناخته‌شده (Exact match for known typos)
@@ -438,9 +440,17 @@ export function spellCheck(
   // ابتدا تصحیح مستقیم خطاهای مشهور
   corrected = fixCommonTypos(corrected);
 
+  let searchOffset = 0;
   for (const word of words) {
     // از کلمات تک‌حرفی، عددی یا لاتین صرف‌نظر می‌کنیم
     if (word.length <= 1 || /^[a-zA-Z0-9_\-\.]+$/.test(word)) continue;
+
+    // موقعیت دقیق وقوع کلمه در متن ورودی
+    const wordPos = text.indexOf(word, searchOffset);
+    const actualPos = wordPos !== -1 ? wordPos : text.indexOf(word);
+    if (wordPos !== -1) {
+      searchOffset = wordPos + word.length;
+    }
 
     // اگر واژه صحیح یا دارای صرف مجاز است ادامه بده
     if (isWordCorrect(word, customDictionary)) continue;
@@ -470,7 +480,7 @@ export function spellCheck(
 
       issues.push({
         word,
-        position: text.indexOf(word),
+        position: actualPos,
         suggestions,
         similarity: Math.round(sim * 100) / 100,
         errorType,

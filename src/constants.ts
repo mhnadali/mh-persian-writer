@@ -472,6 +472,7 @@ export const KEYBOARD_NEIGHBORS: Record<string, string[]> = {
  * اشتباهات املایی رایج و تصحیح آن‌ها
  */
 export const COMMON_TYPOS: Record<string, string> = {
+  'اشتبا': 'اشتباه',
   'مسعول': 'مسئول',
   'مسول': 'مسئول',
   'مسولیت': 'مسئولیت',

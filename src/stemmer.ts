@@ -1,5 +1,14 @@
 import { StemResult } from './types';
-import { PERSIAN_PREFIXES, PERSIAN_SUFFIXES, VERB_STEMS, BROKEN_PLURALS_MAP, ZWNJ } from './constants';
+import {
+  PERSIAN_PREFIXES,
+  PERSIAN_SUFFIXES,
+  VERB_STEMS,
+  BROKEN_PLURALS_MAP,
+  BASE_PERSIAN_DICTIONARY,
+  ZWNJ,
+} from './constants';
+
+const baseDictionarySet = new Set<string>(BASE_PERSIAN_DICTIONARY);
 
 /**
  * Removes the longest matching Persian suffix from a word.
@@ -7,6 +16,11 @@ import { PERSIAN_PREFIXES, PERSIAN_SUFFIXES, VERB_STEMS, BROKEN_PLURALS_MAP, ZWN
  * @returns Object containing the base word and the removed suffix
  */
 export function removeSuffix(word: string): { base: string; suffix: string } {
+  // اگر واژه مستقیماً جزو فرهنگ لغات پایه باشد و فاقد نیم‌فاصله تفکیک‌کننده پسوند باشد، خود کلمه ریشه است
+  if (!word.includes(ZWNJ) && baseDictionarySet.has(word)) {
+    return { base: word, suffix: '' };
+  }
+
   const sortedSuffixes = [...PERSIAN_SUFFIXES].sort((a, b) => b.length - a.length);
 
   for (const suffix of sortedSuffixes) {
@@ -16,10 +30,13 @@ export function removeSuffix(word: string): { base: string; suffix: string } {
         suffix: suffix
       };
     } else if (word.endsWith(suffix) && word.length >= suffix.length + 2) {
-      return {
-        base: word.slice(0, -suffix.length),
-        suffix: suffix
-      };
+      const remainingBase = word.slice(0, -suffix.length);
+      if (remainingBase.length >= 2) {
+        return {
+          base: remainingBase,
+          suffix: suffix
+        };
+      }
     }
   }
 

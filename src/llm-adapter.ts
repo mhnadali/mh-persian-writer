@@ -176,90 +176,94 @@ export async function invokeLLMProvider(
   systemPrompt: string,
   config: LLMProviderConfig
 ): Promise<string> {
-  const { type, apiKey, endpoint, model, temperature = 0.3, maxTokens = 2048 } = config;
+  const { type, apiKey, endpoint, model, temperature = 0.3, maxTokens = 2048, timeoutMs = 30000 } = config;
+  const signal = AbortSignal.timeout(timeoutMs);
 
-  switch (type) {
-    // ۱. ارائه‌دهنده Google Gemini API
-    case 'gemini': {
-      if (!apiKey) {
-        throw new Error('خطا: کلید API برای Google Gemini الزامی است (GEMINI_API_KEY).');
-      }
-      const geminiModel = model || 'gemini-1.5-flash';
-      const url = endpoint || `https://generativelanguage.googleapis.com/v1beta/models/${geminiModel}:generateContent?key=${apiKey}`;
+  try {
+    switch (type) {
+      // ۱. ارائه‌دهنده Google Gemini API
+      case 'gemini': {
+        if (!apiKey) {
+          throw new Error('خطا: کلید API برای Google Gemini الزامی است (GEMINI_API_KEY).');
+        }
+        const geminiModel = model || 'gemini-1.5-flash';
+        const url = endpoint || `https://generativelanguage.googleapis.com/v1beta/models/${geminiModel}:generateContent?key=${apiKey}`;
 
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          system_instruction: { parts: [{ text: systemPrompt }] },
-          contents: [{ parts: [{ text: userPrompt }] }],
-          generationConfig: {
-            temperature,
-            maxOutputTokens: maxTokens,
-          },
-        }),
-      });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`خطای ارتباط با Gemini API (وضعیت: ${response.status}): ${errorText}`);
-      }
-
-      const data: any = await response.json();
-      const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-      if (!text) {
-        throw new Error('پاسخی از مدل Gemini دریافت نشد.');
-      }
-      return text;
-    }
-
-    // ۲. ارائه‌دهنده OpenAI و سرویس‌های سازگار (Groq, DeepSeek, Claude proxy)
-    case 'openai': {
-      if (!apiKey) {
-        throw new Error('خطا: کلید API برای OpenAI الزامی است (OPENAI_API_KEY).');
-      }
-      const url = endpoint || 'https://api.openai.com/v1/chat/completions';
-      const openaiModel = model || 'gpt-4o-mini';
-
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${apiKey}`,
-        },
-        body: JSON.stringify({
-          model: openaiModel,
-          messages: [
-            { role: 'system', content: systemPrompt },
-            { role: 'user', content: userPrompt },
-          ],
-          temperature,
-          max_tokens: maxTokens,
-        }),
-      });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`خطای ارتباط با OpenAI API (وضعیت: ${response.status}): ${errorText}`);
-      }
-
-      const data: any = await response.json();
-      const text = data?.choices?.[0]?.message?.content;
-      if (!text) {
-        throw new Error('پاسخی از مدل OpenAI دریافت نشد.');
-      }
-      return text;
-    }
-
-    // ۳. ارائه‌دهنده مدل‌های محلی Ollama (آفلاین ۱۰۰٪ و محرمانه)
-    case 'ollama': {
-      const url = endpoint || 'http://localhost:11434/api/chat';
-      const ollamaModel = model || 'qwen2.5:7b';
-
-      try {
         const response = await fetch(url, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
+          signal,
+          body: JSON.stringify({
+            system_instruction: { parts: [{ text: systemPrompt }] },
+            contents: [{ parts: [{ text: userPrompt }] }],
+            generationConfig: {
+              temperature,
+              maxOutputTokens: maxTokens,
+            },
+          }),
+        });
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(`خطای ارتباط با Gemini API (وضعیت: ${response.status}): ${errorText}`);
+        }
+
+        const data: any = await response.json();
+        const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+        if (!text) {
+          throw new Error('پاسخی از مدل Gemini دریافت نشد.');
+        }
+        return text;
+      }
+
+      // ۲. ارائه‌دهنده OpenAI و سرویس‌های سازگار (Groq, DeepSeek, Claude proxy)
+      case 'openai': {
+        if (!apiKey) {
+          throw new Error('خطا: کلید API برای OpenAI الزامی است (OPENAI_API_KEY).');
+        }
+        const url = endpoint || 'https://api.openai.com/v1/chat/completions';
+        const openaiModel = model || 'gpt-4o-mini';
+
+        const response = await fetch(url, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${apiKey}`,
+          },
+          signal,
+          body: JSON.stringify({
+            model: openaiModel,
+            messages: [
+              { role: 'system', content: systemPrompt },
+              { role: 'user', content: userPrompt },
+            ],
+            temperature,
+            max_tokens: maxTokens,
+          }),
+        });
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(`خطای ارتباط با OpenAI API (وضعیت: ${response.status}): ${errorText}`);
+        }
+
+        const data: any = await response.json();
+        const text = data?.choices?.[0]?.message?.content;
+        if (!text) {
+          throw new Error('پاسخی از مدل OpenAI دریافت نشد.');
+        }
+        return text;
+      }
+
+      // ۳. ارائه‌دهنده مدل‌های محلی Ollama (آفلاین ۱۰۰٪ و محرمانه)
+      case 'ollama': {
+        const url = endpoint || 'http://localhost:11434/api/chat';
+        const ollamaModel = model || 'qwen2.5:7b';
+
+        const response = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          signal,
           body: JSON.stringify({
             model: ollamaModel,
             messages: [
@@ -284,42 +288,46 @@ export async function invokeLLMProvider(
           throw new Error(`پاسخی از مدل ${ollamaModel} در Ollama دریافت نشد.`);
         }
         return text;
-      } catch (err: any) {
-        if (err.message && err.message.includes('ECONNREFUSED')) {
-          throw new Error('ارتباط با سرور محلی Ollama برقرار نشد. لطفاً اطمینان حاصل کنید Ollama با دستور `ollama serve` در حال اجرا است.');
+      }
+
+      // ۴. ارائه‌دهنده سفارشی
+      case 'custom': {
+        if (!endpoint) {
+          throw new Error('خطا: آدرس endpoint برای ارائه‌دهنده سفارشی الزامی است.');
         }
-        throw err;
+        const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+        if (apiKey) headers['Authorization'] = `Bearer ${apiKey}`;
+
+        const response = await fetch(endpoint, {
+          method: 'POST',
+          headers,
+          signal,
+          body: JSON.stringify({
+            systemPrompt,
+            userPrompt,
+            model,
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error(`خطا در ارائه‌دهنده سفارشی (وضعیت: ${response.status})`);
+        }
+
+        const data: any = await response.json();
+        return data.text || data.content || data.result || JSON.stringify(data);
       }
+
+      default:
+        throw new Error(`ارائه‌دهنده هوش مصنوعی ناشناخته: ${type}`);
     }
-
-    // ۴. ارائه‌دهنده سفارشی
-    case 'custom': {
-      if (!endpoint) {
-        throw new Error('خطا: آدرس endpoint برای ارائه‌دهنده سفارشی الزامی است.');
-      }
-      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-      if (apiKey) headers['Authorization'] = `Bearer ${apiKey}`;
-
-      const response = await fetch(endpoint, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify({
-          systemPrompt,
-          userPrompt,
-          model,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error(`خطا در ارائه‌دهنده سفارشی (وضعیت: ${response.status})`);
-      }
-
-      const data: any = await response.json();
-      return data.text || data.content || data.result || JSON.stringify(data);
+  } catch (err: any) {
+    if (err.name === 'TimeoutError' || (err.message && err.message.toLowerCase().includes('timeout'))) {
+      throw new Error(`خطای مهلت زمانی: ارتباط با سرویس هوش مصنوعی پس از ${Math.round(timeoutMs / 1000)} ثانیه قطع شد.`);
     }
-
-    default:
-      throw new Error(`ارائه‌دهنده هوش مصنوعی نامعتبر: ${type}`);
+    if (err.message && err.message.includes('ECONNREFUSED')) {
+      throw new Error('ارتباط با سرور محلی Ollama برقرار نشد. لطفاً اطمینان حاصل کنید Ollama با دستور `ollama serve` در حال اجرا است.');
+    }
+    throw err;
   }
 }
 
